@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Coupon Management - BloodLink AI Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container">
+    
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <h4 class="fw-bold text-dark mb-0">Partner Coupon &amp; Perks Manager</h4>
+        <small class="text-secondary">Configure available demonstration reward incentives for voluntary donors.</small>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm rounded-pill">
+          <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+        <button type="button" class="btn btn-crimson btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#newCouponModal">
+          <i class="bi bi-plus-lg me-1"></i>Add New Coupon
+        </button>
+      </div>
+    </div>
+
+    <!-- Coupons Table -->
+    <div class="card card-saas p-0 overflow-hidden bg-white mb-4">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th class="ps-4">Title &amp; Partner</th>
+              <th>Category</th>
+              <th>Points Required</th>
+              <th>Status</th>
+              <th>Total Claimed</th>
+              <th class="pe-4 text-end">Created Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in coupons %}
+            <tr>
+              <td class="ps-4">
+                <strong class="text-dark">{{ c.title }}</strong>
+                <small class="text-muted d-block">{{ c.partner_name }}</small>
+              </td>
+              <td><span class="badge bg-light text-secondary border">{{ c.category }}</span></td>
+              <td class="fw-bold text-crimson">{{ c.points_required }} Pts</td>
+              <td>
+                <span class="badge {% if c.coupon_status == 'ACTIVE' %}bg-success{% else %}bg-secondary{% endif %}">
+                  {{ c.coupon_status }}
+                </span>
+              </td>
+              <td class="fw-bold text-dark">{{ c.redemptions.count() }} Claims</td>
+              <td class="pe-4 text-end text-muted" style="font-size: 11px;">{{ c.created_at.strftime('%d %b %Y') }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- New Coupon Modal -->
+<div class="modal fade" id="newCouponModal" tabindex="-1" aria-labelledby="newCouponModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content card-saas border-0 shadow">
+      <div class="modal-header border-bottom">
+        <h5 class="modal-title fw-bold text-dark" id="newCouponModalLabel">Create Partner Reward Offer</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{{ url_for('admin.coupons') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-secondary">Partner Organization Name *</label>
+            <input type="text" name="partner_name" required placeholder="e.g. Apollo Diagnostics or Metro Transit Grid" class="form-control">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-secondary">Coupon Title *</label>
+            <input type="text" name="title" required placeholder="e.g. Free Full Body Diagnostic Health Checkup" class="form-control">
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary">Category *</label>
+              <select name="category" class="form-select">
+                <option value="Healthcare">Healthcare</option>
+                <option value="Diagnostics">Diagnostics</option>
+                <option value="Food & Nutrition">Food &amp; Nutrition</option>
+                <option value="Mobility">Mobility &amp; Transit</option>
+                <option value="Pharmacy">Pharmacy</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary">Points Cost *</label>
+              <input type="number" name="points_required" min="20" max="2000" value="100" required class="form-control fw-bold">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-secondary">Offer Description *</label>
+            <textarea name="description" rows="3" required placeholder="Details of the benefit and redemption conditions." class="form-control small"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer border-top bg-light">
+          <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-crimson btn-sm rounded-pill fw-bold px-3">Publish Coupon</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+
+{% block title %}BloodLink AI - Connected Blood Banks & Smart Donor Matching India{% endblock %}
+
+{% block content %}
+<!-- =========================================================================
+     SECTION 2: COMPACT HERO SECTION (2-Column Presentation Theme)
+     ========================================================================= -->
+<section class="hero-presentation position-relative py-4 py-lg-5">
+  <div class="container">
+    <div class="row align-items-center g-4 g-lg-5">
+      
+      <!-- Left Hero Column -->
+      <div class="col-lg-7">
+        <div class="hero-pill-tag mb-3">
+          <i class="bi bi-heart-pulse-fill text-danger me-1"></i>
+          <span>Pan-India Emergency HealthTech Network &bull; 28 States &amp; 8 UTs</span>
+        </div>
+        
+        <h1 class="display-5 fw-extrabold text-white tracking-tight mb-3" style="line-height: 1.15;">
+          Every Drop Connects a Life.<br />
+          <span style="color: #FFE0E6;">Every Second Counts.</span>
+        </h1>
+
+        <p class="hero-subtitle mb-4 text-white text-opacity-90">
+          Find blood, connect with eligible donors, and bring hospitals and communities together through one coordinated clinical network. Backed by real-time inventory tracking, algorithmic triage, and verified donor rewards.
+        </p>
+
+        <div class="d-flex flex-wrap gap-3 mb-4">
+          <a href="{{ url_for('main.search') }}" class="btn-presentation-white text-decoration-none">
+            <i class="bi bi-search me-2"></i>Find Blood
+          </a>
+          <a href="{{ url_for('main.donors') }}" class="btn-presentation-outline text-decoration-none">
+            <i class="bi bi-heart-fill me-2 text-white"></i>Become a Donor
+          </a>
+        </div>
+
+        <div class="p-3 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-20 shadow-xs" style="max-width: 580px; backdrop-filter: blur(8px);">
+          <div class="d-flex align-items-center gap-2 text-white small fw-semibold">
+            <span class="heart-beat-icon fs-5 text-white"><i class="bi bi-heart-pulse-fill"></i></span>
+            <span>Connecting voluntary donors, blood banks, and hospital emergency triage across India.</span>
+          </div>
+          <div class="d-flex flex-wrap align-items-center gap-4 mt-2 pt-2 border-top border-white border-opacity-20 text-white text-opacity-80 small" style="font-size: 11px;">
+            <span><i class="bi bi-shield-check text-warning me-1"></i>Verified Clinical Centers</span>
+            <span><i class="bi bi-compass text-info me-1"></i>District-Level Precision</span>
+            <span><i class="bi bi-lock-fill text-white me-1"></i>100% Privacy Preserved</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Hero Column: Visual Composition with Status Badges -->
+      <div class="col-lg-5">
+        <div class="hero-image-card border-0 shadow-lg">
+          <img src="{{ url_for('static', filename='images/hero-blood-donation.jpg') }}" alt="Medical Professional and Donor in Clean Clinical Environment">
+          
+          <!-- Floating Badge Top Right -->
+          <div class="hero-floating-badge hero-badge-top-right d-flex align-items-center gap-2">
+            <span class="p-2 rounded-circle bg-danger bg-opacity-10 text-crimson fs-5">
+              <i class="bi bi-droplet-fill"></i>
+            </span>
+            <div>
+              <strong class="d-block text-dark small mb-0">Universal Donors</strong>
+              <span class="badge bg-danger rounded-pill px-2" style="font-size: 10px;">O- Negative Ready</span>
+            </div>
+          </div>
+
+          <!-- Floating Badge Bottom Left -->
+          <div class="hero-floating-badge hero-badge-bottom-left d-flex align-items-center gap-3">
+            <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle" style="width: 40px; height: 40px;">
+              <i class="bi bi-activity fs-5"></i>
+            </div>
+            <div>
+              <strong class="d-block text-dark small">Reported Inventory</strong>
+              <span class="text-muted" style="font-size: 11px;">{{ total_units_reported }} Units Monitored Live</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     SECTION 3: KEY PLATFORM STATISTICS (Live Database Counters)
+     ========================================================================= -->
+<section class="py-3 py-md-4 bg-light-page border-bottom">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <span class="badge bg-white text-muted border px-3 py-1 rounded-pill text-uppercase" style="font-size: 10px;">
+        <i class="bi bi-database me-1 text-primary"></i>Live Platform Statistics
+      </span>
+      <span class="text-muted" style="font-size: 11px;">Updated from verified database transactions</span>
+    </div>
+
+    <div class="row g-2 g-md-3 text-center">
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100 shadow-xs">
+          <div class="display-6 fw-bold text-crimson mb-1">{{ total_donors }}</div>
+          <div class="small fw-bold text-navy text-uppercase" style="font-size: 11px;">Voluntary Donors</div>
+          <small class="text-muted" style="font-size: 11px;">Consented Lifesavers</small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100 shadow-xs">
+          <div class="display-6 fw-bold text-navy mb-1">{{ total_banks }}</div>
+          <div class="small fw-bold text-navy text-uppercase" style="font-size: 11px;">Verified Blood Banks</div>
+          <small class="text-muted" style="font-size: 11px;">Across 36 States &amp; UTs</small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100 shadow-xs">
+          <div class="display-6 fw-bold text-primary mb-1">{{ total_hospitals }}</div>
+          <div class="small fw-bold text-navy text-uppercase" style="font-size: 11px;">Connected Hospitals</div>
+          <small class="text-muted" style="font-size: 11px;">Accredited Healthcare Centers</small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100 shadow-xs">
+          <div class="display-6 fw-bold text-success mb-1">{{ verified_donations }}</div>
+          <div class="small fw-bold text-navy text-uppercase" style="font-size: 11px;">Verified Donations</div>
+          <small class="text-muted" style="font-size: 11px;">Recorded On-Site by Labs</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     SECTION 4: QUICK-ACTION CARDS & COMPACT TRIAGE
+     ========================================================================= -->
+<section class="py-4 py-md-5 bg-white border-bottom">
+  <div class="container">
+    
+    <!-- 4A. Compact Search Card: "Find Blood Near You" -->
+    <div class="card card-saas p-4 bg-white border shadow-sm mb-4">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 pb-2 border-bottom">
+        <div>
+          <h5 class="fw-bold text-navy mb-0">
+            <i class="bi bi-search-heart text-crimson me-2"></i>Find Blood Near You
+          </h5>
+          <small class="text-muted">Instant reported inventory lookup by blood group and administrative location.</small>
+        </div>
+        <span class="badge bg-danger bg-opacity-10 text-crimson border border-danger border-opacity-25 px-3 py-1.5 rounded-pill small">
+          Pan-India Coverage
+        </span>
+      </div>
+
+      <form action="{{ url_for('main.search') }}" method="GET" class="row g-3 align-items-end">
+        <input type="hidden" name="scope" value="district">
+
+        <div class="col-md-3 col-sm-6">
+          <label class="form-label small fw-bold text-secondary">Blood Group *</label>
+          <select name="blood_group" class="form-select fw-bold text-dark">
+            <option value="">Any Group (Show All)</option>
+            <option value="O+">O Positive (O+)</option>
+            <option value="O-">O Negative (O- Universal)</option>
+            <option value="A+">A Positive (A+)</option>
+            <option value="A-">A Negative (A-)</option>
+            <option value="B+">B Positive (B+)</option>
+            <option value="B-">B Negative (B-)</option>
+            <option value="AB+">AB Positive (AB+ Recipient)</option>
+            <option value="AB-">AB Negative (AB-)</option>
+          </select>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <label class="form-label small fw-bold text-secondary">State / Union Territory *</label>
+          <select name="state" id="hero_state" class="form-select">
+            <option value="">-- All India (Select State) --</option>
+            {% for st in all_indian_states %}
+            <option value="{{ st }}">{{ st }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <label class="form-label small fw-bold text-secondary">District *</label>
+          <select name="district" id="hero_district" class="form-select" disabled>
+            <option value="">-- Select State First --</option>
+          </select>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <button type="submit" class="btn btn-crimson w-100 py-2.5 fw-bold shadow-sm">
+            <i class="bi bi-search me-1"></i>Search Availability
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 4B. Quick Triage Selection: "Find Blood by Group" (8 Groups) -->
+    <div class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h5 class="fw-bold text-navy mb-0">
+            <i class="bi bi-droplet-half text-crimson me-2"></i>Find Blood by Group
+          </h5>
+          <small class="text-muted">Select your required blood type to instantly inspect reported stock across verified facilities.</small>
+        </div>
+        <a href="{{ url_for('main.search') }}" class="btn btn-outline-secondary btn-sm rounded-pill d-none d-sm-inline-block">
+          All Inventories &rarr;
+        </a>
+      </div>
+
+      <div class="row g-2 g-md-3">
+        {% set blood_types = [
+          ('A+', 'Rh Positive', 'Can receive from A+, A-, O+, O-'),
+          ('A-', 'Rh Negative', 'Universal plasma receiver group'),
+          ('B+', 'Rh Positive', 'Can receive from B+, B-, O+, O-'),
+          ('B-', 'Rh Negative', 'Critical emergency need'),
+          ('AB+', 'Universal Recipient', 'Can receive RBC from all blood types'),
+          ('AB-', 'Rh Negative', 'Universal plasma donor group'),
+          ('O+', 'Most Common', 'Can donate RBC to all positive types'),
+          ('O-', 'Universal Donor', 'Crucial emergency trauma reserve')
+        ] %}
+        {% for bg, sub, desc in blood_types %}
+        <div class="col-6 col-sm-6 col-md-3">
+          <a href="{{ url_for('main.search', blood_group=bg, scope='all_india') }}" class="blood-group-badge-card h-100 text-decoration-none">
+            <span class="blood-name">{{ bg }}</span>
+            <span class="blood-sub">{{ sub }}</span>
+            <small class="text-muted text-center mt-1" style="font-size: 10px;">{{ desc }}</small>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 4C. Quick-Action Shortcuts -->
+    <div class="row g-3">
+      <div class="col-6 col-lg-3">
+        <a href="{{ url_for('main.blood_banks') }}" class="card card-saas p-3 bg-light-page border text-decoration-none text-dark h-100 card-hover-lift">
+          <div class="d-flex align-items-center gap-3">
+            <span class="p-2.5 rounded-3 bg-danger bg-opacity-10 text-crimson fs-5">
+              <i class="bi bi-hospital"></i>
+            </span>
+            <div>
+              <strong class="d-block small text-navy">Blood Banks Directory</strong>
+              <small class="text-muted" style="font-size: 11px;">Search accredited centers</small>
+            </div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-lg-3">
+        <a href="{{ url_for('main.emergency_requests') }}" class="card card-saas p-3 bg-light-page border text-decoration-none text-dark h-100 card-hover-lift">
+          <div class="d-flex align-items-center gap-3">
+            <span class="p-2.5 rounded-3 bg-warning bg-opacity-15 text-warning fs-5">
+              <i class="bi bi-truck-front-fill text-dark"></i>
+            </span>
+            <div>
+              <strong class="d-block small text-navy">Emergency Requests</strong>
+              <small class="text-muted" style="font-size: 11px;">High-priority hospital triage</small>
+            </div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-lg-3">
+        <a href="{{ url_for('main.donors') }}" class="card card-saas p-3 bg-light-page border text-decoration-none text-dark h-100 card-hover-lift">
+          <div class="d-flex align-items-center gap-3">
+            <span class="p-2.5 rounded-3 bg-success bg-opacity-10 text-success fs-5">
+              <i class="bi bi-heart-fill"></i>
+            </span>
+            <div>
+              <strong class="d-block small text-navy">Become a Donor</strong>
+              <small class="text-muted" style="font-size: 11px;">Clinical eligibility guide</small>
+            </div>
+          </div>
+        </a>
+      </div>
+      <div class="col-6 col-lg-3">
+        <a href="{{ url_for('main.map_view') }}" class="card card-saas p-3 bg-light-page border text-decoration-none text-dark h-100 card-hover-lift">
+          <div class="d-flex align-items-center gap-3">
+            <span class="p-2.5 rounded-3 bg-info bg-opacity-10 text-info fs-5">
+              <i class="bi bi-geo-alt-fill text-primary"></i>
+            </span>
+            <div>
+              <strong class="d-block small text-navy">Nationwide Blood Map</strong>
+              <small class="text-muted" style="font-size: 11px;">Geographic facility grid</small>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- =========================================================================
+     SECTION 5: COMPACT TRUST & SAFETY SUMMARY & WORKFLOW
+     ========================================================================= -->
+<section class="py-4 py-md-5 bg-light-page">
+  <div class="container">
+    
+    <!-- 5A. Streamlined Logistics: "How BloodLink AI Works" -->
+    <div class="text-center max-w-xl mx-auto mb-4">
+      <span class="text-crimson fw-bold small text-uppercase tracking-wider">Streamlined Logistics</span>
+      <h2 class="fw-bold text-navy mt-1">How BloodLink AI Works</h2>
+      <p class="text-secondary small mb-0">Four connected steps bringing transparency, clinical safety, and speed to blood coordination.</p>
+    </div>
+
+    <div class="row g-3 mb-5">
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 p-md-4 h-100 bg-white card-hover-lift">
+          <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-crimson rounded-3 fs-5 mb-2" style="width: 44px; height: 44px;">
+            <i class="bi bi-search"></i>
+          </div>
+          <span class="badge bg-light text-muted border w-fit mb-2 small" style="font-size: 10px;">Step 01</span>
+          <h6 class="fw-bold text-navy mb-1">Search Blood</h6>
+          <p class="text-secondary small leading-relaxed mb-0" style="font-size: 12px;">
+            Locate reported units by blood group, component, and district in seconds.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 p-md-4 h-100 bg-white card-hover-lift">
+          <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-3 fs-5 mb-2" style="width: 44px; height: 44px;">
+            <i class="bi bi-hospital"></i>
+          </div>
+          <span class="badge bg-light text-muted border w-fit mb-2 small" style="font-size: 10px;">Step 02</span>
+          <h6 class="fw-bold text-navy mb-1">Connect Blood Banks</h6>
+          <p class="text-secondary small leading-relaxed mb-0" style="font-size: 12px;">
+            Access verified facilities, medical hotlines, and real-time inventory reserves.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 p-md-4 h-100 bg-white card-hover-lift">
+          <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-3 fs-5 mb-2" style="width: 44px; height: 44px;">
+            <i class="bi bi-check2-circle"></i>
+          </div>
+          <span class="badge bg-light text-muted border w-fit mb-2 small" style="font-size: 10px;">Step 03</span>
+          <h6 class="fw-bold text-navy mb-1">Record Donations</h6>
+          <p class="text-secondary small leading-relaxed mb-0" style="font-size: 12px;">
+            Complete donations at accredited centers with transactional digital verification.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 p-md-4 h-100 bg-white card-hover-lift">
+          <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning rounded-3 fs-5 mb-2" style="width: 44px; height: 44px;">
+            <i class="bi bi-award-fill"></i>
+          </div>
+          <span class="badge bg-light text-muted border w-fit mb-2 small" style="font-size: 10px;">Step 04</span>
+          <h6 class="fw-bold text-navy mb-1">Track &amp; Earn Perks</h6>
+          <p class="text-secondary small leading-relaxed mb-0" style="font-size: 12px;">
+            Earn Lifesaver points for health checkup vouchers and partner discounts.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5B. Clinical Trust & Privacy Highlights -->
+    <div class="card card-saas p-4 bg-white border mb-4">
+      <div class="row g-4 align-items-center">
+        <div class="col-md-4 border-end-md">
+          <div class="d-flex align-items-start gap-3">
+            <span class="p-2 rounded-3 bg-success bg-opacity-10 text-success fs-5">
+              <i class="bi bi-patch-check-fill"></i>
+            </span>
+            <div>
+              <strong class="d-block text-navy small">Facility Verification Gate</strong>
+              <small class="text-muted">Only state-licensed hospitals &amp; accredited blood banks can publish stock or issue requests.</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 border-end-md">
+          <div class="d-flex align-items-start gap-3">
+            <span class="p-2 rounded-3 bg-primary bg-opacity-10 text-primary fs-5">
+              <i class="bi bi-shield-lock-fill"></i>
+            </span>
+            <div>
+              <strong class="d-block text-navy small">Donor Location Privacy</strong>
+              <small class="text-muted">Exact coordinates are never published; calculations use anonymized district centroids.</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="d-flex align-items-start gap-3">
+            <span class="p-2 rounded-3 bg-danger bg-opacity-10 text-crimson fs-5">
+              <i class="bi bi-heart-pulse"></i>
+            </span>
+            <div>
+              <strong class="d-block text-navy small">Mandatory Cross-Matching</strong>
+              <small class="text-muted">Matches are logistical guides; certified laboratory cross-matching is legally mandatory.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5C. Frequently Asked Questions (Accordion) -->
+    <div class="card card-saas p-3 p-md-4 bg-white border" style="max-width: 860px; margin: 0 auto;">
+      <div class="text-center mb-3">
+        <h5 class="fw-bold text-navy mb-1"><i class="bi bi-question-circle text-crimson me-1"></i>Frequently Asked Questions</h5>
+        <small class="text-secondary">Important clarifications on clinical protocols, donor privacy, and matching rules.</small>
+      </div>
+
+      <div class="accordion accordion-flush" id="faqAccordion">
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="faq1">
+            <button class="accordion-button collapsed fw-bold text-navy small py-2.5" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="false">
+              Does a preliminary smart match establish medical transfusion compatibility?
+            </button>
+          </h2>
+          <div id="collapse1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body text-secondary small pt-1">
+              <strong>No.</strong> Preliminary smart matching is purely a logistical coordination recommendation based on declared ABO/Rh compatibility rules and geographic distance. Mandatory laboratory cross-matching, antibody screening, infectious marker tests, and clinical donor physical evaluation must always be conducted by qualified medical professionals before any transfusion.
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="faq2">
+            <button class="accordion-button collapsed fw-bold text-navy small py-2.5" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false">
+              How is voluntary donor personal information protected?
+            </button>
+          </h2>
+          <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body text-secondary small pt-1">
+              BloodLink AI enforces strict zero-data-leakage policies. Exact coordinates and residential addresses of donors are never publicly displayed. Only anonymized distance calculations are performed, and emergency contact alerts are dispatched only with explicit notification consent.
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="faq3">
+            <button class="accordion-button collapsed fw-bold text-navy small py-2.5" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false">
+              How are donation reward points verified?
+            </button>
+          </h2>
+          <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body text-secondary small pt-1">
+              Donors cannot self-verify donations. Only authorized personnel at accredited blood banks can verify in-person donations through their secure dashboard. Upon verification, the ledger automatically credits points transactionally to prevent duplicate rewards.
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="faq4">
+            <button class="accordion-button collapsed fw-bold text-navy small py-2.5" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false">
+              What is the mandatory clinical donation interval (cooldown)?
+            </button>
+          </h2>
+          <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body text-secondary small pt-1">
+              In accordance with WHO and Indian National Blood Transfusion Council (NBTC) guidelines, a mandatory minimum cooldown interval of 56 days (8 weeks) is enforced between whole blood donations to ensure donor hemoglobin recovery and physical safety.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    initLocationCascade('hero_state', 'hero_district', 'hero_city', '', '', true);
+  });
+</script>
+{% endblock %}

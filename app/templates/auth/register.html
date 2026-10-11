@@ -1,0 +1,428 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="auth-split-wrapper">
+  <!-- Left Side: Registration Form Side -->
+  <div class="auth-form-side">
+    <div class="mb-4">
+      <div class="d-inline-flex align-items-center gap-2 mb-2">
+        <span class="d-inline-flex align-items-center justify-content-center bg-crimson rounded-3 text-white" style="width: 40px; height: 40px;">
+          <i class="bi bi-person-plus-fill fs-5"></i>
+        </span>
+        <span class="fw-bold tracking-tight text-dark fs-4">
+          BloodLink<span class="text-crimson">.AI</span>
+        </span>
+      </div>
+      <h2 class="fw-extrabold text-dark tracking-tight">Create Your Account</h2>
+      <p class="text-secondary small">Join India's unified blood logistics grid. Select your stakeholder role below.</p>
+    </div>
+
+    <!-- Registration Type Pills -->
+    <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-pill border" id="regPills" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link rounded-pill py-2 small fw-bold {% if reg_type == 'donor' %}active bg-crimson text-white shadow-sm{% else %}text-secondary{% endif %}" href="{{ url_for('auth.register', type='donor') }}">
+          <i class="bi bi-heart-fill me-1"></i>Voluntary Donor
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link rounded-pill py-2 small fw-bold {% if reg_type == 'hospital' %}active bg-primary text-white shadow-sm{% else %}text-secondary{% endif %}" href="{{ url_for('auth.register', type='hospital') }}">
+          <i class="bi bi-hospital me-1"></i>Hospital
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link rounded-pill py-2 small fw-bold {% if reg_type == 'blood_bank' %}active bg-crimson text-white shadow-sm{% else %}text-secondary{% endif %}" href="{{ url_for('auth.register', type='blood_bank') }}">
+          <i class="bi bi-droplet-half me-1"></i>Blood Bank
+        </a>
+      </li>
+    </ul>
+
+    <div class="card card-saas p-4 bg-white shadow-sm border">
+      
+      {% if reg_type == 'donor' %}
+      <!-- DONOR FORM -->
+      <form action="{{ url_for('auth.register') }}" method="POST" id="donorRegForm" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="reg_type" value="donor">
+
+        <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom d-flex align-items-center gap-2">
+          <i class="bi bi-person-badge text-crimson"></i>
+          <span>Personal &amp; Blood Details</span>
+        </h6>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-secondary">Full Name *</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-person"></i></span>
+            <input type="text" name="name" required placeholder="e.g. Arjun Sharma" value="{{ form_data.name if form_data else '' }}" class="form-control border-start-0 py-2">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-secondary">Email Address *</label>
+          <div class="input-group">
+            <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-envelope"></i></span>
+            <input type="email" name="email" required placeholder="arjun@domain.com" value="{{ form_data.email if form_data else '' }}" class="form-control border-start-0 py-2">
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Password *</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock"></i></span>
+              <input type="password" name="password" id="donorPassword" required minlength="8" placeholder="At least 8 characters" class="form-control border-start-0 border-end-0">
+              <button class="btn btn-outline-secondary border-start-0" type="button" id="toggleDonorPassBtn">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+            <div class="form-text text-muted" style="font-size: 11px;">Must be at least 8 characters in length.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Confirm Password *</label>
+            <input type="password" name="confirm_password" id="donorConfirmPassword" required minlength="8" placeholder="Repeat password" class="form-control">
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Declared Blood Group *</label>
+            <select name="blood_group" required class="form-select fw-bold text-danger border">
+              {% for bg, bg_label in [
+                ('O+', 'O Positive (O+)'),
+                ('O-', 'O Negative (O- Universal Donor)'),
+                ('A+', 'A Positive (A+)'),
+                ('A-', 'A Negative (A-)'),
+                ('B+', 'B Positive (B+)'),
+                ('B-', 'B Negative (B-)'),
+                ('AB+', 'AB Positive (AB+ Universal Recipient)'),
+                ('AB-', 'AB Negative (AB-)')
+              ] %}
+              <option value="{{ bg }}" {% if form_data and form_data.blood_group == bg %}selected{% endif %}>{{ bg_label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Phone Number (Optional)</label>
+            <input type="tel" name="phone" placeholder="+91 98765 43210" value="{{ form_data.phone if form_data else '' }}" class="form-control">
+          </div>
+        </div>
+
+        <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom pt-2 d-flex align-items-center gap-2">
+          <i class="bi bi-geo-alt text-danger"></i>
+          <span>Location in India (State &bull; District &bull; City)</span>
+        </h6>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">State / Union Territory *</label>
+            <select name="state" id="donor_state" required class="form-select border">
+              <option value="">-- Select State / UT --</option>
+              {% for st in all_indian_states %}
+              <option value="{{ st }}" {% if form_data and form_data.state == st %}selected{% endif %}>{{ st }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">District *</label>
+            <select name="district" id="donor_district" required class="form-select border">
+              <option value="">-- Select State First --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-secondary">City / Town *</label>
+          <input type="text" name="city" id="donor_city" required placeholder="e.g. Pune, Kochi, Lucknow, Bengaluru" value="{{ form_data.city if form_data else '' }}" class="form-control">
+        </div>
+
+        <div class="form-check mb-4 p-3 rounded-3 bg-light border small">
+          <input class="form-check-input" type="checkbox" name="notification_consent" id="notifConsent" checked>
+          <label class="form-check-label text-secondary" for="notifConsent">
+            I consent to receive relevant emergency notifications when matching critical requests are posted in my district. (Preferences can be modified anytime).
+          </label>
+        </div>
+
+        <button type="submit" id="donorSubmitBtn" class="btn btn-crimson w-100 py-2 fw-bold rounded-3 shadow-sm">
+          <i class="bi bi-heart-fill me-2"></i>Complete Voluntary Donor Registration
+        </button>
+      </form>
+
+      {% else %}
+      <!-- ORGANIZATION FORM (HOSPITAL / BLOOD BANK) -->
+      <form action="{{ url_for('auth.register') }}" method="POST" id="orgRegForm" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="reg_type" value="{{ reg_type }}">
+
+        <div class="alert alert-info py-2 px-3 small mb-4 d-flex align-items-center gap-2" role="alert">
+          <i class="bi bi-shield-lock-fill fs-5 text-primary"></i>
+          <div>
+            <strong>Verification Notice:</strong> Organization accounts begin in <code>PENDING</code> status. An administrator must approve your verification before trusted requests or inventory updates can be executed.
+          </div>
+        </div>
+
+        <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom d-flex align-items-center gap-2">
+          <i class="bi bi-hospital text-crimson"></i>
+          <span>Facility Details</span>
+        </h6>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-secondary">Organization / Hospital Name *</label>
+          <input type="text" name="org_name" required placeholder="e.g. Apollo Hospital or Rotary Central Blood Bank" value="{{ form_data.org_name if form_data else '' }}" class="form-control py-2">
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Registration Reference / License</label>
+            <input type="text" name="registration_reference" placeholder="e.g. BL-MED-2026-09" value="{{ form_data.registration_reference if form_data else '' }}" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Official Contact Phone *</label>
+            <input type="tel" name="contact_phone" required placeholder="+91 80 2630 4050" value="{{ form_data.contact_phone if form_data else '' }}" class="form-control">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-secondary">Official Facility Email</label>
+          <input type="email" name="contact_email" placeholder="facility@organization.org" value="{{ form_data.contact_email if form_data else '' }}" class="form-control">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-secondary">Physical Address *</label>
+          <input type="text" name="address" required placeholder="Full street address, landmarks" value="{{ form_data.address if form_data else '' }}" class="form-control">
+        </div>
+
+        <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom pt-2 d-flex align-items-center gap-2">
+          <i class="bi bi-geo-alt text-danger"></i>
+          <span>Facility Location (State &bull; District &bull; City)</span>
+        </h6>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">State / Union Territory *</label>
+            <select name="state" id="org_state" required class="form-select border">
+              <option value="">-- Select State / UT --</option>
+              {% for st in all_indian_states %}
+              <option value="{{ st }}" {% if form_data and form_data.state == st %}selected{% endif %}>{{ st }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">District *</label>
+            <select name="district" id="org_district" required class="form-select border">
+              <option value="">-- Select State First --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-secondary">City / Town *</label>
+          <input type="text" name="city" id="org_city" required placeholder="City / Town name" value="{{ form_data.city if form_data else '' }}" class="form-control">
+        </div>
+
+        <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom pt-2 d-flex align-items-center gap-2">
+          <i class="bi bi-person-check text-primary"></i>
+          <span>Authorized Coordinator (Account Credentials)</span>
+        </h6>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-secondary">Representative Full Name *</label>
+          <input type="text" name="representative_name" required placeholder="Dr. Sarah Connor" value="{{ form_data.representative_name if form_data else '' }}" class="form-control py-2">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-secondary">Authorized Work Email *</label>
+          <input type="email" name="representative_email" required placeholder="coordinator@organization.org" value="{{ form_data.representative_email if form_data else '' }}" class="form-control py-2">
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Password *</label>
+            <div class="input-group">
+              <input type="password" name="password" id="orgPassword" required minlength="8" placeholder="At least 8 characters" class="form-control border-end-0">
+              <button class="btn btn-outline-secondary border-start-0" type="button" id="toggleOrgPassBtn">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+            <div class="form-text text-muted" style="font-size: 11px;">Must be at least 8 characters in length.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Confirm Password *</label>
+            <input type="password" name="confirm_password" id="orgConfirmPassword" required minlength="8" placeholder="Repeat password" class="form-control">
+          </div>
+        </div>
+
+        <button type="submit" id="orgSubmitBtn" class="btn {% if reg_type == 'hospital' %}btn-primary{% else %}btn-crimson{% endif %} w-100 py-2 fw-bold rounded-3 shadow-sm">
+          <i class="bi bi-shield-check me-2"></i>Submit Organization For Verification
+        </button>
+      </form>
+      {% endif %}
+
+      <div class="mt-4 pt-3 border-top text-center text-muted small">
+        Already registered? 
+        <a href="{{ url_for('auth.login') }}" class="text-crimson fw-bold text-decoration-none ms-1">Sign In Here</a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Right Side: Healthcare Visual Panel -->
+  <div class="auth-image-side d-none d-lg-flex" style="background-image: url('{{ url_for('static', filename='images/signup-donor.jpg') }}');">
+    <div class="auth-image-overlay"></div>
+    <div class="auth-image-content">
+      <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-25 text-white fw-bold small mb-3">
+        <i class="bi bi-heart-pulse-fill"></i>
+        <span>Join India's Voluntary Lifeline</span>
+      </div>
+      <h2 class="display-6 fw-extrabold text-white mb-3">
+        Be The Match.<br />
+        Save A Life Today.
+      </h2>
+      <p class="text-white text-opacity-75 small leading-relaxed mb-4" style="max-width: 460px;">
+        Connect with regional blood banks and hospital trauma centers in your district. Voluntary donors receive verified rewards, complimentary health checkups, and exclusive community badges.
+      </p>
+      <div class="d-flex align-items-center gap-4 text-white text-opacity-90 small pt-2 border-top border-white border-opacity-25">
+        <div>
+          <strong class="d-block fs-5 fw-bold">100+ Points</strong>
+          <span style="font-size: 11px;">Per Verified Donation</span>
+        </div>
+        <div>
+          <strong class="d-block fs-5 fw-bold">Private</strong>
+          <span style="font-size: 11px;">Consent-driven alerts</span>
+        </div>
+        <div>
+          <strong class="d-block fs-5 fw-bold">Pan-India</strong>
+          <span style="font-size: 11px;">All States &amp; UTs</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    {% if reg_type == 'donor' %}
+      initLocationCascade(
+        'donor_state',
+        'donor_district',
+        'donor_city',
+        "{{ form_data.district if form_data else '' }}",
+        "{{ form_data.city if form_data else '' }}"
+      );
+      initPasswordToggle('toggleDonorPassBtn', 'donorPassword');
+
+      const donorForm = document.getElementById('donorRegForm');
+      if (donorForm) {
+        donorForm.addEventListener('submit', function(e) {
+          const pass = document.getElementById('donorPassword').value;
+          const confirmPass = document.getElementById('donorConfirmPassword').value;
+          const state = document.getElementById('donor_state').value;
+          const district = document.getElementById('donor_district').value;
+          const name = donorForm.querySelector('input[name="name"]').value.trim();
+          const email = donorForm.querySelector('input[name="email"]').value.trim();
+
+          if (!name || !email) {
+            e.preventDefault();
+            alert('Please fill in your Full Name and Email Address.');
+            return false;
+          }
+          if (pass.length < 8) {
+            e.preventDefault();
+            alert('Password must be at least 8 characters in length.');
+            document.getElementById('donorPassword').focus();
+            return false;
+          }
+          if (pass !== confirmPass) {
+            e.preventDefault();
+            alert('Passwords do not match. Please ensure both password fields are identical.');
+            document.getElementById('donorConfirmPassword').focus();
+            return false;
+          }
+          if (!state) {
+            e.preventDefault();
+            alert('Please select your State / Union Territory.');
+            document.getElementById('donor_state').focus();
+            return false;
+          }
+          if (!district) {
+            e.preventDefault();
+            alert('Please select your District.');
+            document.getElementById('donor_district').focus();
+            return false;
+          }
+
+          const submitBtn = document.getElementById('donorSubmitBtn');
+          if (submitBtn) {
+            submitBtn.classList.add('disabled');
+            submitBtn.style.pointerEvents = 'none';
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creating Account...';
+          }
+        });
+      }
+
+    {% else %}
+      initLocationCascade(
+        'org_state',
+        'org_district',
+        'org_city',
+        "{{ form_data.district if form_data else '' }}",
+        "{{ form_data.city if form_data else '' }}"
+      );
+      initPasswordToggle('toggleOrgPassBtn', 'orgPassword');
+
+      const orgForm = document.getElementById('orgRegForm');
+      if (orgForm) {
+        orgForm.addEventListener('submit', function(e) {
+          const pass = document.getElementById('orgPassword').value;
+          const confirmPass = document.getElementById('orgConfirmPassword').value;
+          const state = document.getElementById('org_state').value;
+          const district = document.getElementById('org_district').value;
+          const orgName = orgForm.querySelector('input[name="org_name"]').value.trim();
+          const repName = orgForm.querySelector('input[name="representative_name"]').value.trim();
+          const repEmail = orgForm.querySelector('input[name="representative_email"]').value.trim();
+
+          if (!orgName || !repName || !repEmail) {
+            e.preventDefault();
+            alert('Please fill in the Organization Name, Coordinator Name, and Work Email.');
+            return false;
+          }
+          if (pass.length < 8) {
+            e.preventDefault();
+            alert('Password must be at least 8 characters in length.');
+            document.getElementById('orgPassword').focus();
+            return false;
+          }
+          if (pass !== confirmPass) {
+            e.preventDefault();
+            alert('Passwords do not match. Please ensure both password fields are identical.');
+            document.getElementById('orgConfirmPassword').focus();
+            return false;
+          }
+          if (!state) {
+            e.preventDefault();
+            alert('Please select your State / Union Territory.');
+            document.getElementById('org_state').focus();
+            return false;
+          }
+          if (!district) {
+            e.preventDefault();
+            alert('Please select your District.');
+            document.getElementById('org_district').focus();
+            return false;
+          }
+
+          const submitBtn = document.getElementById('orgSubmitBtn');
+          if (submitBtn) {
+            submitBtn.classList.add('disabled');
+            submitBtn.style.pointerEvents = 'none';
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting For Verification...';
+          }
+        });
+      }
+    {% endif %}
+  });
+</script>
+{% endblock %}

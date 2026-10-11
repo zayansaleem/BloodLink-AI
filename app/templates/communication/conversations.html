@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Message Center - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container" style="max-width: 900px;">
+
+    <!-- Header Row -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-primary bg-opacity-10 text-primary fw-bold small mb-2">
+          <i class="bi bi-chat-dots-fill"></i>
+          <span>Coordination Communications Console</span>
+        </div>
+        <h3 class="fw-bold text-navy mb-0">Blood Request Message Center</h3>
+        <p class="text-secondary small mb-0">Direct, authorized coordination channels between verified hospital clinical teams and voluntary donors.</p>
+      </div>
+
+      <div>
+        {% if current_user.role == 'DONOR' %}
+        <a href="{{ url_for('donor.dashboard') }}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill">
+          <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+        </a>
+        {% elif current_user.role == 'HOSPITAL' %}
+        <a href="{{ url_for('hospital.dashboard') }}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill">
+          <i class="bi bi-arrow-left me-1"></i>Back to Console
+        </a>
+        {% elif current_user.role == 'ADMIN' %}
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill">
+          <i class="bi bi-arrow-left me-1"></i>Back to Admin
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Security & Privacy Notice -->
+    <div class="alert alert-light border py-2.5 px-3 small d-flex align-items-center gap-2 mb-4 rounded-3 shadow-xs">
+      <i class="bi bi-shield-check text-success fs-5 flex-shrink-0"></i>
+      <div style="font-size: 11px;">
+        <strong>Clinical Privacy Enforced:</strong> All communications are securely encrypted, associate with specific verified transfusion requests, and avoid exposing private patient identifiers.
+      </div>
+    </div>
+
+    <!-- Conversations List Card -->
+    <div class="card card-saas p-4 bg-white shadow-sm border">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <h5 class="fw-bold text-navy mb-0">Active Conversations</h5>
+        <span class="badge bg-light text-navy border">{{ conversations|length }} Channels</span>
+      </div>
+
+      {% if conversations %}
+      <div class="list-group list-group-flush">
+        {% for conv in conversations %}
+        <a href="{{ url_for('communication.view_conversation', conversation_id=conv.id) }}" class="list-group-item list-group-item-action p-3 rounded-3 mb-2 border bg-light-page d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 transition">
+          <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+              {% if current_user.role == 'DONOR' %}
+              <span class="fw-bold text-navy fs-6">
+                <i class="bi bi-hospital text-crimson me-1"></i>{{ conv.hospital.organization_name }}
+              </span>
+              {% elif current_user.role == 'HOSPITAL' %}
+              <span class="fw-bold text-navy fs-6">
+                <i class="bi bi-person-heart text-danger me-1"></i>{{ conv.donor.name }}
+              </span>
+              {% else %}
+              <span class="fw-bold text-navy fs-6">
+                {{ conv.hospital.organization_name }} &bull; {{ conv.donor.name }}
+              </span>
+              {% endif %}
+
+              <span class="badge bg-danger bg-opacity-10 text-crimson border border-danger border-opacity-25" style="font-size: 10px;">
+                {{ conv.blood_request.blood_group }}
+              </span>
+            </div>
+
+            <div class="small text-secondary">
+              Request Ref: <strong>{{ conv.blood_request.request_reference }}</strong> &bull; Need: {{ conv.blood_request.units_required }} Unit(s) ({{ conv.blood_request.urgency_level }})
+            </div>
+
+            {% set last_msg = conv.messages.order_by(conv.messages.statement.columns.created_at.desc()).first() if conv.messages.count() else none %}
+            {% if last_msg %}
+            <div class="small text-muted mt-1 text-truncate" style="max-width: 450px;">
+              <span class="fw-semibold">{{ last_msg.sender.name }}:</span> {{ last_msg.message_body }}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="text-sm-end text-muted small">
+            <div>{{ conv.updated_at.strftime('%d %b, %H:%M') }}</div>
+            <span class="btn btn-outline-crimson btn-sm py-0.5 px-2.5 mt-1" style="font-size: 11px;">
+              Open Chat &rarr;
+            </span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-muted small">
+        <i class="bi bi-chat-left-dots fs-1 text-secondary d-block mb-2"></i>
+        No active message channels yet. Coordination conversations are initiated automatically when hospital staff or voluntary donors message each other regarding active requests.
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

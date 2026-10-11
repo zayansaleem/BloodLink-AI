@@ -1,0 +1,590 @@
+{% extends 'base.html' %}
+
+{% block title %}Donor Dashboard - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  
+  <!-- Sidebar Navigation -->
+  <aside class="dashboard-sidebar">
+    <div class="text-center pb-3 mb-3 border-bottom">
+      <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-crimson rounded-circle fw-extrabold fs-3 mb-2" style="width: 64px; height: 64px;">
+        {{ profile.declared_blood_group }}
+      </div>
+      <h6 class="fw-bold text-navy mb-0">{{ current_user.name }}</h6>
+      <small class="text-muted d-block" style="font-size: 11px;">
+        <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ profile.city }}, {{ profile.district }}
+      </small>
+      <span class="badge bg-danger bg-opacity-10 text-crimson border border-danger border-opacity-25 rounded-pill px-2.5 py-1 mt-2 small" style="font-size: 10px;">
+        Voluntary Donor
+      </span>
+    </div>
+
+    <!-- Sidebar Navigation Links -->
+    <nav class="flex-grow-1">
+      <a href="{{ url_for('donor.dashboard') }}" class="sidebar-nav-link active">
+        <i class="bi bi-grid-fill"></i>Dashboard Overview
+      </a>
+      <a href="#opportunities" class="sidebar-nav-link">
+        <i class="bi bi-heart-pulse-fill"></i>Donation Opportunities
+      </a>
+      <a href="#my-responses" class="sidebar-nav-link">
+        <i class="bi bi-check2-circle"></i>My Responses
+      </a>
+      <a href="{{ url_for('communication.list_conversations') }}" class="sidebar-nav-link">
+        <i class="bi bi-chat-dots-fill"></i>Message Center
+      </a>
+      <a href="{{ url_for('donor.rewards') }}" class="sidebar-nav-link">
+        <i class="bi bi-gift-fill"></i>Rewards Marketplace
+      </a>
+      <a href="{{ url_for('main.search') }}" class="sidebar-nav-link">
+        <i class="bi bi-search"></i>Find Blood Units
+      </a>
+      <a href="{{ url_for('main.emergency_requests') }}" class="sidebar-nav-link">
+        <i class="bi bi-truck-front-fill"></i>Emergency Requests
+      </a>
+      <a href="{{ url_for('donor.profile') }}" class="sidebar-nav-link">
+        <i class="bi bi-person-gear"></i>Profile &amp; Settings
+      </a>
+    </nav>
+
+    <!-- Availability Status Control -->
+    <div class="p-3 rounded-3 bg-light-page border mt-auto">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small fw-bold text-navy" style="font-size: 11px;">Standby Status</span>
+        {% if profile.availability_status %}
+        <span class="badge bg-success" style="font-size: 10px;">Ready</span>
+        {% else %}
+        <span class="badge bg-secondary" style="font-size: 10px;">Paused</span>
+        {% endif %}
+      </div>
+      <form action="{{ url_for('donor.toggle_availability') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-outline-secondary btn-sm w-100 py-1" style="font-size: 11px;">
+          <i class="bi bi-power me-1"></i>Toggle Availability
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Main Dashboard Content -->
+  <main class="dashboard-main">
+    
+    <!-- Welcome Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <h3 class="fw-bold text-navy mb-0">Welcome back, {{ current_user.name }}</h3>
+        <p class="text-secondary small mb-0">Track your voluntary contributions, review clinical cooldowns, and redeem earned rewards.</p>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('donor.rewards') }}" class="btn btn-crimson btn-sm px-3 shadow-xs">
+          <i class="bi bi-gift me-1"></i>Redeem Rewards
+        </a>
+        <a href="{{ url_for('main.search') }}" class="btn btn-outline-secondary btn-sm px-3">
+          <i class="bi bi-search me-1"></i>Find Blood
+        </a>
+      </div>
+    </div>
+
+    <!-- Top Key Metrics Cards -->
+    <div class="row g-4 mb-4">
+      
+      <!-- Card 1: Featured Rewards Balance -->
+      <div class="col-lg-4 col-md-6">
+        <div class="rewards-card-featured h-100 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <span class="badge bg-white text-navy rounded-pill px-3 py-1 fw-bold small text-uppercase" style="font-size: 10px;">
+                Lifesaver Balance
+              </span>
+              <span class="text-white text-opacity-75" style="font-size: 12px;">Verified Points</span>
+            </div>
+            <div class="rewards-points-number mb-1">{{ balance }}</div>
+            <span class="text-white text-opacity-80 small">Points Available to Redeem</span>
+          </div>
+          <div class="pt-3 border-top border-white border-opacity-20 d-flex justify-content-between align-items-center">
+            <span class="text-white text-opacity-75" style="font-size: 11px;">100 pts per verified donation</span>
+            <a href="{{ url_for('donor.rewards') }}" class="btn btn-light btn-sm rounded-pill px-3 text-crimson fw-bold" style="font-size: 11px;">
+              Redeem Perks &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Clinical Cooldown Status -->
+      <div class="col-lg-4 col-md-6">
+        <div class="card card-saas p-4 bg-white h-100 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="small fw-bold text-secondary text-uppercase" style="font-size: 11px;">56-Day Cooldown Status</span>
+              <i class="bi bi-shield-check text-success fs-5"></i>
+            </div>
+            
+            {% if is_eligible %}
+            <div class="d-flex align-items-center gap-2 text-success fw-bold fs-5 my-2">
+              <i class="bi bi-check-circle-fill"></i>
+              <span>Eligible to Donate</span>
+            </div>
+            <p class="text-secondary small mb-0">Your 56-day physiological recovery window is complete. Ready for whole blood donation.</p>
+            {% else %}
+            <div class="d-flex align-items-center gap-2 text-warning fw-bold fs-5 my-2">
+              <i class="bi bi-hourglass-split"></i>
+              <span>Recovery In Progress</span>
+            </div>
+            <p class="text-secondary small mb-0"><strong>{{ cooldown_days }} days remaining</strong> before your next safe clinical donation interval.</p>
+            {% endif %}
+          </div>
+
+          <div class="pt-3 border-top text-muted" style="font-size: 11px;">
+            <i class="bi bi-calendar-event me-1"></i>Last recorded donation: <strong>{{ profile.last_donation_date or 'None recorded yet' }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Total Completed Donations & Lives Saved -->
+      <div class="col-lg-4 col-md-12">
+        <div class="card card-saas p-4 bg-white h-100 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="small fw-bold text-secondary text-uppercase" style="font-size: 11px;">Completed Donations</span>
+              <i class="bi bi-heart-fill text-danger fs-5"></i>
+            </div>
+            <div class="display-6 fw-bold text-navy my-2">{{ donations|length }}</div>
+            <p class="text-secondary small mb-0">
+              Each whole blood donation can be processed into RBC, platelets, and plasma, potentially saving up to <strong>{{ (donations|length) * 3 }} patient lives</strong>.
+            </p>
+          </div>
+
+          <div class="pt-3 border-top text-muted d-flex justify-content-between align-items-center" style="font-size: 11px;">
+            <span>Profile Completion: <strong>{{ completion_pct }}%</strong></span>
+            <a href="{{ url_for('donor.profile') }}" class="text-crimson text-decoration-none fw-semibold">Edit &rarr;</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Incoming Hospital Invitations (Phase 3 Emergency Delivery) -->
+    <div class="card card-saas p-4 bg-white mb-4 border-start border-4 border-primary">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div>
+          <h5 class="fw-bold text-navy mb-0">
+            <i class="bi bi-envelope-heart-fill text-primary me-2"></i>Emergency Hospital Invitations
+          </h5>
+          <small class="text-secondary">Accredited hospital facilities requesting your immediate voluntary participation.</small>
+        </div>
+        <span class="badge bg-primary rounded-pill">{{ my_invitations|length }} Received</span>
+      </div>
+
+      {% if my_invitations %}
+      <div class="row g-3">
+        {% for inv in my_invitations %}
+        <div class="col-md-6">
+          <div class="card p-3 rounded-3 border bg-light h-100 shadow-xs">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="badge {% if inv.invitation_status == 'ACCEPTED' %}bg-success{% elif inv.invitation_status == 'DECLINED' %}bg-secondary{% else %}bg-primary{% endif %}" style="font-size: 11px;">
+                {{ inv.invitation_status }}
+              </span>
+              <span class="badge bg-danger bg-opacity-10 text-crimson fw-bold" style="font-size: 11px;">
+                {{ inv.blood_request.urgency_level }} Urgency
+              </span>
+            </div>
+
+            <h6 class="fw-bold text-navy mb-1">{{ inv.hospital.organization_name }}</h6>
+            <div class="small text-secondary mb-2">
+              <span class="d-block"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Location: <strong>{{ inv.blood_request.location }}</strong></span>
+              <span class="d-block"><i class="bi bi-droplet-fill text-crimson me-1"></i>Requirement: <strong>{{ inv.blood_request.units_required }} Unit(s)</strong> of <span class="badge bg-danger bg-opacity-10 text-crimson fw-bold">{{ inv.blood_request.blood_group }}</span> ({{ inv.blood_request.component_type }})</span>
+              <span class="d-block text-muted" style="font-size: 11px;"><i class="bi bi-clock me-1"></i>Deadline: {{ inv.blood_request.clinical_deadline.strftime('%d %b %Y, %H:%M') if inv.blood_request.clinical_deadline else 'Standard Emergency Protocol' }}</span>
+            </div>
+
+            {% if inv.message %}
+            <p class="small text-muted fst-italic mb-3 bg-white p-2 rounded border">"{{ inv.message }}"</p>
+            {% endif %}
+
+            <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center gap-2 flex-wrap">
+              <a href="{{ url_for('communication.start_or_get_conversation', request_id=inv.blood_request_id, donor_id=current_user.id) }}" class="btn btn-outline-primary btn-sm py-1 px-2.5" style="font-size: 11px;">
+                <i class="bi bi-chat-dots me-1"></i>Message Hospital
+              </a>
+              {% if inv.invitation_status == 'SENT' %}
+              <div class="d-flex gap-1">
+                <form action="{{ url_for('donor.respond_to_invitation', invitation_id=inv.id) }}" method="POST">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="decision" value="ACCEPT">
+                  <button type="submit" class="btn btn-success btn-sm py-1 px-2.5 fw-semibold" style="font-size: 11px;">
+                    <i class="bi bi-check-circle-fill me-1"></i>I'm Ready to Donate
+                  </button>
+                </form>
+                <form action="{{ url_for('donor.respond_to_invitation', invitation_id=inv.id) }}" method="POST">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="decision" value="DECLINE">
+                  <button type="submit" class="btn btn-outline-secondary btn-sm py-1 px-2" style="font-size: 11px;">
+                    <i class="bi bi-x-circle me-1"></i>Decline Request
+                  </button>
+                </form>
+              </div>
+              {% elif inv.invitation_status == 'ACCEPTED' %}
+              <span class="badge bg-success bg-opacity-10 text-success fw-bold p-1.5" style="font-size: 11px;">
+                <i class="bi bi-check2-all me-1"></i>Willingness Confirmed (Awaiting On-Site Screening)
+              </span>
+              {% elif inv.invitation_status == 'DECLINED' %}
+              <span class="badge bg-secondary bg-opacity-10 text-secondary p-1.5" style="font-size: 11px;">
+                <i class="bi bi-x me-1"></i>Declined
+              </span>
+              {% endif %}
+            </div>
+            <div class="mt-2 text-muted" style="font-size: 10px;">
+              <i class="bi bi-info-circle me-1"></i>Accepting registers your intent and willingness to donate. Clinical suitability, vitals, and cross-matching will be verified upon arrival.
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="p-4 text-center border rounded-3 bg-light text-muted">
+        <i class="bi bi-shield-check text-success fs-1 mb-2 d-block"></i>
+        <h6 class="fw-bold text-navy mb-1">No Pending Emergency Invitations</h6>
+        <p class="small text-secondary mb-0">You are on active standby. When verified regional medical facilities issue emergency requests matching your blood profile, you will receive immediate alerts and actionable invitations here.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- FEATURE 1: Blood Donation Opportunities -->
+    <div id="opportunities" class="card card-saas p-4 bg-white mb-4">
+      <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3 pb-2 border-bottom">
+        <div>
+          <h5 class="fw-bold text-navy mb-0">
+            <i class="bi bi-heart-pulse-fill text-crimson me-2"></i>Blood Donation Opportunities
+          </h5>
+          <small class="text-secondary">Suitable requests from verified hospital facilities compatible with your blood group ({{ profile.declared_blood_group }}).</small>
+        </div>
+        <span class="badge bg-light text-navy border align-self-start align-self-sm-auto">{{ compatible_requests|length }} Opportunities</span>
+      </div>
+
+      <div class="alert alert-info py-2 px-3 small d-flex align-items-center gap-2 mb-3 rounded-3" role="alert">
+        <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
+        <div>
+          <strong>Preliminary Assessment Notice:</strong> Expressing willingness to donate does not constitute clinical clearance or guarantee a donation will occur. Certified blood bank medical personnel will conduct formal vital checks and physiological screening upon arrival.
+        </div>
+      </div>
+
+      {% if compatible_requests %}
+      <div class="row g-3">
+        {% for req in compatible_requests %}
+        <div class="col-lg-6">
+          <div class="card p-3 rounded-3 border bg-light-page h-100 d-flex flex-column shadow-xs">
+            <!-- Header badges -->
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                <span class="badge {% if req.urgency_level == 'CRITICAL' %}bg-danger priority-critical-pulse{% elif req.urgency_level == 'HIGH' %}bg-warning text-dark{% else %}bg-secondary{% endif %}" style="font-size: 10px;">
+                  {{ req.urgency_level }} URGENCY
+                </span>
+                <span class="badge bg-white text-navy border" style="font-size: 10px;">
+                  {{ req.request_status }}
+                </span>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 10px;">
+                  <i class="bi bi-check-circle-fill me-1"></i>Compatible Match
+                </span>
+              </div>
+              <span class="small text-muted" style="font-size: 11px;">
+                <i class="bi bi-calendar3 me-1"></i>{{ req.created_at.strftime('%d %b %Y') }}
+              </span>
+            </div>
+
+            <!-- Request Reference & Clinical Requirement -->
+            <h6 class="fw-bold text-navy mb-1 d-flex align-items-center justify-content-between">
+              <span>{{ req.request_reference }}</span>
+              <span class="badge bg-danger bg-opacity-10 text-crimson fw-extrabold px-2 py-1">
+                {{ req.units_required }} Unit(s) of {{ req.blood_group }}
+              </span>
+            </h6>
+            <div class="small text-secondary mb-2">
+              Component: <strong>{{ req.component_type }}</strong>
+            </div>
+
+            <!-- Hospital info & Verification badge -->
+            <div class="p-2.5 rounded bg-white border mb-2.5 small">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-bold text-navy">
+                  <i class="bi bi-hospital me-1.5 text-crimson"></i>{{ req.requesting_organization.organization_name }}
+                </span>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 9px;">
+                  <i class="bi bi-patch-check-fill me-1"></i>Verified Facility
+                </span>
+              </div>
+              <div class="text-muted d-flex align-items-center justify-content-between" style="font-size: 11px;">
+                <span><i class="bi bi-geo-alt me-1"></i>{{ req.city or req.district }}, {{ req.state }}</span>
+                {% if req.approx_distance is not none %}
+                <span class="fw-semibold text-primary"><i class="bi bi-cursor-fill me-1"></i>Approx. {{ req.approx_distance }} km away</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Deadline -->
+            {% if req.clinical_deadline %}
+            <div class="small text-danger fw-semibold mb-3" style="font-size: 11px;">
+              <i class="bi bi-clock-history me-1"></i>Required by: {{ req.clinical_deadline.strftime('%d %b, %H:%M') }}
+            </div>
+            {% endif %}
+
+            <!-- Actions / Response Status -->
+            <div class="mt-auto pt-2.5 border-top d-flex justify-content-between align-items-center">
+              {% if req.donor_response and req.donor_response.response_status != 'WITHDRAWN' %}
+                <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-50 py-1.5 px-2.5 small">
+                  <i class="bi bi-check-circle-fill me-1"></i>Responded: {{ req.donor_response.response_status }}
+                </span>
+                <a href="{{ url_for('communication.start_or_get_conversation', request_id=req.id, donor_id=current_user.id) }}" class="btn btn-outline-crimson btn-sm py-1 px-2.5" style="font-size: 11px;">
+                  <i class="bi bi-chat-dots me-1"></i>Message Hospital
+                </a>
+              {% else %}
+                <button type="button" class="btn btn-crimson btn-sm w-100 py-1.5 fw-bold shadow-xs" data-bs-toggle="modal" data-bs-target="#donateModal{{ req.id }}">
+                  <i class="bi bi-heart-fill me-1.5"></i>I'm Ready to Donate
+                </button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Confirmation: I'm Ready to Donate -->
+        <div class="modal fade" id="donateModal{{ req.id }}" tabindex="-1" aria-labelledby="donateModalLabel{{ req.id }}" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+              <div class="modal-header bg-crimson text-white">
+                <h5 class="modal-title fw-bold" id="donateModalLabel{{ req.id }}">
+                  <i class="bi bi-heart-fill me-2"></i>Confirm Willingness to Donate
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form action="{{ url_for('donor.respond_to_request', request_id=req.id) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body p-4">
+                  <div class="alert alert-light border py-2.5 px-3 mb-3 small">
+                    <div class="fw-bold text-navy mb-1">{{ req.request_reference }} &bull; {{ req.requesting_organization.organization_name }}</div>
+                    <div class="text-muted">{{ req.units_required }} Unit(s) of {{ req.blood_group }} ({{ req.component_type }})</div>
+                    <div class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ req.location }}</div>
+                  </div>
+
+                  <p class="small text-secondary mb-3">
+                    By clicking <strong>"Submit Willingness to Donate"</strong>, you signal your voluntary readiness to coordinate with the hospital clinical staff.
+                  </p>
+
+                  <div class="mb-3">
+                    <label class="form-label small fw-bold text-navy">Optional Note for Hospital Staff</label>
+                    <textarea name="response_message" class="form-control form-control-sm" rows="2" placeholder="e.g. Can visit facility between 2 PM and 5 PM today..."></textarea>
+                  </div>
+
+                  <div class="alert alert-warning py-2 px-3 small d-flex gap-2 align-items-start mb-0">
+                    <i class="bi bi-exclamation-triangle-fill text-warning fs-5 flex-shrink-0 mt-0.5"></i>
+                    <div style="font-size: 11px;">
+                      Expressing interest is not a clinical clearance. On-site vital confirmation by registered medical staff remains mandatory prior to transfusion collection.
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer bg-light">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-crimson btn-sm px-3 fw-bold">
+                    <i class="bi bi-check2-circle me-1"></i>Submit Willingness to Donate
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-4 text-muted small">
+        <i class="bi bi-check2-circle text-success fs-3 d-block mb-1"></i>
+        No active emergency shortages matching your blood group in your area right now. Thank you for staying on standby!
+      </div>
+      {% endif %}
+
+      {% if clinical_review_requests %}
+      <div class="mt-4 pt-3 border-top">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h6 class="fw-bold text-navy mb-0">
+              <i class="bi bi-clipboard-pulse text-warning me-2"></i>Requests Requiring Clinical Review
+            </h6>
+            <small class="text-secondary">Specialized component requests (e.g. Platelets) requiring direct pathologist cross-matching and clinical evaluation.</small>
+          </div>
+          <span class="badge bg-warning bg-opacity-25 text-dark border border-warning">{{ clinical_review_requests|length }} Under Review</span>
+        </div>
+
+        <div class="row g-3">
+          {% for req in clinical_review_requests %}
+          <div class="col-lg-6">
+            <div class="card p-3 rounded-3 border border-warning border-opacity-50 bg-white h-100 d-flex flex-column shadow-xs">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                  <span class="badge bg-warning text-dark" style="font-size: 10px;">
+                    <i class="bi bi-hourglass-split me-1"></i>Clinical Review Required
+                  </span>
+                  <span class="badge bg-light text-navy border" style="font-size: 10px;">
+                    {{ req.urgency_level }}
+                  </span>
+                </div>
+                <span class="small text-muted" style="font-size: 11px;">
+                  <i class="bi bi-calendar3 me-1"></i>{{ req.created_at.strftime('%d %b %Y') }}
+                </span>
+              </div>
+
+              <h6 class="fw-bold text-navy mb-1 d-flex align-items-center justify-content-between">
+                <span>{{ req.request_reference }}</span>
+                <span class="badge bg-secondary bg-opacity-10 text-dark fw-bold px-2 py-1">
+                  {{ req.units_required }} Unit(s) of {{ req.blood_group }}
+                </span>
+              </h6>
+              <div class="small text-secondary mb-2">
+                Component: <strong>{{ req.component_type }}</strong>
+              </div>
+
+              <div class="p-2.5 rounded bg-light border mb-2.5 small">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="fw-bold text-navy">
+                    <i class="bi bi-hospital me-1.5 text-crimson"></i>{{ req.requesting_organization.organization_name }}
+                  </span>
+                  <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 9px;">
+                    Verified Facility
+                  </span>
+                </div>
+                <div class="text-muted" style="font-size: 11px;">
+                  <i class="bi bi-geo-alt me-1"></i>{{ req.city or req.district }}, {{ req.state }}
+                  {% if req.approx_distance is not none %} &bull; Approx. {{ req.approx_distance }} km away{% endif %}
+                </div>
+              </div>
+
+              <div class="mt-auto pt-2 border-top">
+                <div class="p-2 rounded bg-warning bg-opacity-10 border border-warning border-opacity-25 text-dark small" style="font-size: 11px;">
+                  <i class="bi bi-info-circle me-1 text-warning"></i>
+                  <strong>Pathologist Review:</strong> This component requires specialized laboratory cross-matching. The hospital will initiate direct contact if preliminary criteria align.
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- FEATURE 1.C: My Blood Request Responses -->
+    <div id="my-responses" class="card card-saas p-4 bg-white mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div>
+          <h5 class="fw-bold text-navy mb-0">
+            <i class="bi bi-check2-all text-success me-2"></i>My Blood Request Responses
+          </h5>
+          <small class="text-secondary">Historical and active records of requests where you signaled readiness to donate.</small>
+        </div>
+        <span class="badge bg-light text-navy border">{{ my_responses|length }} Total</span>
+      </div>
+
+      {% if my_responses %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th>Request Ref</th>
+              <th>Hospital Facility</th>
+              <th>Blood Group</th>
+              <th>Date Responded</th>
+              <th>Status</th>
+              <th>Last Update</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for resp in my_responses %}
+            <tr>
+              <td class="fw-bold text-navy">{{ resp.blood_request.request_reference }}</td>
+              <td>{{ resp.blood_request.requesting_organization.organization_name }}</td>
+              <td><span class="badge bg-danger bg-opacity-10 text-crimson fw-bold">{{ resp.blood_request.blood_group }}</span></td>
+              <td>{{ resp.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+              <td>
+                <span class="badge {% if resp.response_status in ('INTERESTED', 'CONFIRMED') %}bg-success{% elif resp.response_status == 'WITHDRAWN' %}bg-secondary{% elif resp.response_status == 'COMPLETED' %}bg-primary{% else %}bg-warning text-dark{% endif %}">
+                  {{ resp.response_status }}
+                </span>
+              </td>
+              <td>{{ resp.updated_at.strftime('%d %b %Y') }}</td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-1.5 align-items-center">
+                  <a href="{{ url_for('communication.start_or_get_conversation', request_id=resp.blood_request_id, donor_id=current_user.id) }}" class="btn btn-outline-primary btn-sm py-0.5 px-2" style="font-size: 11px;">
+                    <i class="bi bi-chat-dots"></i>
+                  </a>
+                  {% if resp.response_status not in ('WITHDRAWN', 'COMPLETED', 'DECLINED') %}
+                  <form action="{{ url_for('donor.withdraw_response', response_id=resp.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to withdraw your response for this request?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm py-0.5 px-2 text-danger" style="font-size: 11px;" title="Withdraw Response">
+                      <i class="bi bi-x-circle"></i> Withdraw
+                    </button>
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-4 text-muted small">
+        <i class="bi bi-inbox fs-2 text-secondary d-block mb-1"></i>
+        You have not responded to any blood requests yet. Explore the "Blood Donation Opportunities" above to help patients in need.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Verified Donation History Table -->
+    <div class="card card-saas p-4 bg-white mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div>
+          <h5 class="fw-bold text-navy mb-0">Verified Donation Records</h5>
+          <small class="text-muted">On-site authenticated records recorded by accredited blood banks.</small>
+        </div>
+        <span class="badge bg-light text-navy border">{{ donations|length }} Total</span>
+      </div>
+
+      {% if donations %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th>Donation ID</th>
+              <th>Facility / Blood Bank</th>
+              <th>Date</th>
+              <th>Component</th>
+              <th>Units</th>
+              <th>Verification Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in donations %}
+            <tr>
+              <td class="fw-bold text-navy">#{{ d.id }}</td>
+              <td>{{ d.blood_bank.organization_name }}</td>
+              <td>{{ d.donation_date.strftime('%d %b %Y') }}</td>
+              <td>{{ d.component_type }}</td>
+              <td class="fw-bold">{{ d.units }} Unit(s)</td>
+              <td>
+                <span class="badge {% if d.verification_status == 'VERIFIED' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                  {{ d.verification_status }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-4 text-muted small">
+        <i class="bi bi-inbox fs-2 text-secondary d-block mb-1"></i>
+        No verified donations recorded yet. Visit any accredited participating blood bank to complete an in-person donation.
+      </div>
+      {% endif %}
+    </div>
+
+  </main>
+</div>
+{% endblock %}

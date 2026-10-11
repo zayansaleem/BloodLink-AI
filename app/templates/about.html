@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}About BloodLink AI - Mission & Architecture{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container" style="max-width: 900px;">
+    
+    <div class="text-center mb-5">
+      <span class="text-crimson fw-bold small text-uppercase">Project Overview</span>
+      <h2 class="fw-bold text-dark mt-1">About BloodLink AI</h2>
+      <p class="text-secondary small">Engineered for the Royal Hackathon 2026 to bridge critical delays in emergency transfusion logistics.</p>
+    </div>
+
+    <div class="card card-saas p-4 p-md-5 bg-white mb-4 space-y-4">
+      <h5 class="fw-bold text-dark">The Challenge</h5>
+      <p class="text-secondary small leading-relaxed">
+        In acute surgical, obstetric, and trauma emergencies, blood supply chains suffer from severe fragmentation. Medical teams often spend vital hours making frantic phone calls to multiple regional facilities, unaware of real-time inventory balances or nearby willing donors.
+      </p>
+
+      <h5 class="fw-bold text-dark">Our Solution</h5>
+      <p class="text-secondary small leading-relaxed">
+        BloodLink AI unifies verified blood banks, authorized hospital request coordinators, and voluntary donors into an interoperable network. By combining server-side emergency prioritization scoring with explainable multi-factor donor matching, the platform ensures rapid, secure, and privacy-preserving response times.
+      </p>
+
+      <h5 class="fw-bold text-dark">Core Architecture Principles</h5>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="p-3 rounded bg-light border">
+            <strong class="d-block text-dark small mb-1"><i class="bi bi-cpu text-crimson me-1"></i>Explainable AI Triage</strong>
+            <span class="text-secondary" style="font-size: 12px;">Prioritizes emergency requests using clear mathematical formulas (clinical severity, deadlines, shortage index) without black-box opacity.</span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="p-3 rounded bg-light border">
+            <strong class="d-block text-dark small mb-1"><i class="bi bi-shield-lock text-primary me-1"></i>Privacy-By-Design</strong>
+            <span class="text-secondary" style="font-size: 12px;">Donors are never exposed by exact home location. Communications occur through server-authorized notifications.</span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="p-3 rounded bg-light border">
+            <strong class="d-block text-dark small mb-1"><i class="bi bi-award text-success me-1"></i>Verified Donation Rewards</strong>
+            <span class="text-secondary" style="font-size: 12px;">Incentivizes altruistic voluntary donation with verified points and coupons, never cash payments.</span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="p-3 rounded bg-light border">
+            <strong class="d-block text-dark small mb-1"><i class="bi bi-hospital text-danger me-1"></i>Strict Clinical Safeguards</strong>
+            <span class="text-secondary" style="font-size: 12px;">All organization accounts require administrator approval. Unverified organizations cannot post trusted requests.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

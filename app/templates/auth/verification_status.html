@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}Organization Verification Status - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container" style="max-width: 720px;">
+    
+    <div class="card card-saas p-4 p-md-5 bg-white border shadow-sm">
+      
+      {% if org and org.is_verified %}
+      <!-- VERIFIED STATE -->
+      <div class="text-center mb-4">
+        <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle fs-1 mb-3" style="width: 72px; height: 72px;">
+          <i class="bi bi-patch-check-fill"></i>
+        </div>
+        <h4 class="fw-bold text-navy mb-1">Facility Accreditation Verified &amp; Active</h4>
+        <span class="badge bg-success text-white rounded-pill px-3 py-1 fw-bold">STATUS: VERIFIED</span>
+      </div>
+
+      <div class="alert alert-success border small p-3 mb-4">
+        <p class="mb-2 leading-relaxed text-dark">
+          Congratulations! <strong>{{ org.organization_name }}</strong> has been formally audited and accredited by BloodLink AI administrators in compliance with clinical safety standards.
+        </p>
+        <p class="mb-0 text-dark fw-semibold">
+          <i class="bi bi-shield-check text-success me-1"></i>Operational Clinical Privileges Activated:
+        </p>
+        <ul class="mb-0 mt-1 ps-3 text-secondary">
+          {% if org.organization_type == 'HOSPITAL' %}
+          <li>Direct issuing of emergency blood transfusion requests into the active matching network</li>
+          <li>Direct coordination and confidential messaging with voluntary blood donors</li>
+          <li>Real-time regional blood bank stock search and reservation access</li>
+          {% else %}
+          <li>Laboratory blood inventory reporting and reserve management</li>
+          <li>Direct coordination with regional hospitals for transfusion fulfillment</li>
+          <li>Digital verification and certification of completed voluntary blood donations</li>
+          {% endif %}
+        </ul>
+      </div>
+
+      {% elif org and org.verification_status == 'REJECTED' %}
+      <!-- REJECTED STATE -->
+      <div class="text-center mb-4">
+        <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger rounded-circle fs-1 mb-3" style="width: 72px; height: 72px;">
+          <i class="bi bi-x-circle-fill"></i>
+        </div>
+        <h4 class="fw-bold text-navy mb-1">Accreditation Application Rejected</h4>
+        <span class="badge bg-danger text-white rounded-pill px-3 py-1 fw-bold">STATUS: REJECTED</span>
+      </div>
+
+      <div class="alert alert-danger border small p-3 mb-4">
+        <p class="mb-2 leading-relaxed text-dark">
+          Your facility accreditation credentials for <strong>{{ org.organization_name }}</strong> could not be approved at this time.
+        </p>
+        {% if application and application.review_reason %}
+        <div class="p-2 bg-white rounded border border-danger border-opacity-25 mt-2">
+          <strong class="text-danger d-block mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>Administrator Justification:</strong>
+          <span class="text-secondary">{{ application.review_reason }}</span>
+        </div>
+        {% endif %}
+        <p class="mb-0 text-muted mt-2">
+          Clinical privileges remain inactive. To appeal or provide updated regulatory documentation, please contact administrator compliance support.
+        </p>
+      </div>
+
+      {% elif org and org.verification_status == 'SUSPENDED' %}
+      <!-- SUSPENDED STATE -->
+      <div class="text-center mb-4">
+        <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger rounded-circle fs-1 mb-3" style="width: 72px; height: 72px;">
+          <i class="bi bi-slash-circle-fill"></i>
+        </div>
+        <h4 class="fw-bold text-navy mb-1">Facility Accreditation Suspended</h4>
+        <span class="badge bg-danger text-white rounded-pill px-3 py-1 fw-bold">STATUS: SUSPENDED</span>
+      </div>
+
+      <div class="alert alert-warning border small p-3 mb-4">
+        <p class="mb-0 text-dark">
+          Privileges for <strong>{{ org.organization_name }}</strong> have been temporarily suspended due to administrative compliance review. Please contact compliance support.
+        </p>
+      </div>
+
+      {% else %}
+      <!-- PENDING STATE (Default) -->
+      <div class="text-center mb-4">
+        <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning rounded-circle fs-2 mb-3" style="width: 72px; height: 72px;">
+          <i class="bi bi-hourglass-split"></i>
+        </div>
+        <h4 class="fw-bold text-navy mb-1">Accreditation Audit in Progress</h4>
+        <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-bold">STATUS: PENDING VERIFICATION</span>
+      </div>
+
+      <div class="alert alert-light border small text-secondary p-3 mb-4">
+        <p class="mb-2 leading-relaxed">
+          Thank you for joining BloodLink AI. In accordance with National Blood Transfusion Council (NBTC) guidelines and clinical data integrity standards, all healthcare facilities and blood banks must be formally validated by platform administrators prior to performing live operational duties.
+        </p>
+        <p class="mb-0 text-dark fw-semibold">
+          <i class="bi bi-shield-lock-fill text-danger me-1"></i>Protected Functions (Disabled Until Approval):
+        </p>
+        <ul class="mb-0 mt-1 ps-3 text-muted">
+          <li>Issuing emergency hospital transfusion requests</li>
+          <li>Modifying reported blood bank unit inventories</li>
+          <li>Authorizing voluntary donor credits and verification desk actions</li>
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if org %}
+      <div class="p-3 bg-light rounded border mb-4">
+        <h6 class="fw-bold text-dark mb-2 pb-1 border-bottom">Submitted Facility Details</h6>
+        <div class="row g-2 small">
+          <div class="col-sm-4 text-muted">Facility Name:</div>
+          <div class="col-sm-8 fw-semibold text-dark">{{ org.organization_name }}</div>
+
+          <div class="col-sm-4 text-muted">Facility Type:</div>
+          <div class="col-sm-8"><span class="badge bg-secondary">{{ org.organization_type }}</span></div>
+
+          <div class="col-sm-4 text-muted">Registration Ref:</div>
+          <div class="col-sm-8 font-monospace">{{ org.registration_reference or 'Pending Document Verification' }}</div>
+
+          <div class="col-sm-4 text-muted">Location:</div>
+          <div class="col-sm-8">{{ org.city }}, {{ org.district }} ({{ org.state }})</div>
+
+          <div class="col-sm-4 text-muted">Verification Status:</div>
+          <div class="col-sm-8">
+            <span class="badge {% if org.is_verified %}bg-success{% elif org.verification_status == 'REJECTED' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+              {{ org.verification_status }}
+            </span>
+          </div>
+
+          <div class="col-sm-4 text-muted">Submitted On:</div>
+          <div class="col-sm-8">{{ org.created_at.strftime('%d %b %Y, %H:%M') }}</div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 pt-2 border-top">
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-4">
+          <i class="bi bi-box-arrow-right me-1"></i>Sign Out
+        </a>
+        <div class="d-flex gap-2">
+          <a href="{{ url_for('main.search') }}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+            <i class="bi bi-search me-1"></i>Public Availability
+          </a>
+          {% if org and org.is_verified %}
+            {% if current_user.role == 'HOSPITAL' %}
+            <a href="{{ url_for('hospital.dashboard') }}" class="btn btn-crimson btn-sm rounded-pill px-4 fw-bold">
+              <i class="bi bi-hospital me-1"></i>Hospital Dashboard &rarr;
+            </a>
+            {% elif current_user.role == 'BLOOD_BANK' %}
+            <a href="{{ url_for('blood_bank.dashboard') }}" class="btn btn-crimson btn-sm rounded-pill px-4 fw-bold">
+              <i class="bi bi-building me-1"></i>Blood Bank Dashboard &rarr;
+            </a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}

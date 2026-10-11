@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Organization Approvals - BloodLink AI Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container">
+    
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <h4 class="fw-bold text-dark mb-0">Healthcare Organization Verification Desk</h4>
+        <small class="text-secondary">Review and approve hospital and blood bank facility accreditation.</small>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm rounded-pill">
+          <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+      </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="mb-4 d-flex gap-2">
+      <a href="{{ url_for('admin.organizations', status='PENDING') }}" class="btn btn-sm rounded-pill {% if current_filter == 'PENDING' %}btn-danger{% else %}btn-light border{% endif %}">
+        Pending Verification
+      </a>
+      <a href="{{ url_for('admin.organizations', status='VERIFIED') }}" class="btn btn-sm rounded-pill {% if current_filter == 'VERIFIED' %}btn-success{% else %}btn-light border{% endif %}">
+        Approved Facilities
+      </a>
+      <a href="{{ url_for('admin.organizations', status='ALL') }}" class="btn btn-sm rounded-pill {% if current_filter == 'ALL' %}btn-dark{% else %}btn-light border{% endif %}">
+        All Records
+      </a>
+    </div>
+
+    <!-- Organizations Table -->
+    <div class="card card-saas p-0 overflow-hidden bg-white">
+      {% if organizations %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th class="ps-4">Organization Name</th>
+              <th>Type</th>
+              <th>State / License Ref</th>
+              <th>City</th>
+              <th>Contact</th>
+              <th>Status</th>
+              <th class="pe-4 text-end">Verification Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for org in organizations %}
+            <tr>
+              <td class="ps-4">
+                <strong class="text-dark">{{ org.organization_name }}</strong>
+                <small class="text-muted d-block">{{ org.address }}</small>
+              </td>
+              <td>
+                <span class="badge {% if org.organization_type == 'HOSPITAL' %}bg-primary{% else %}bg-danger{% endif %}">
+                  {{ org.organization_type }}
+                </span>
+              </td>
+              <td class="text-secondary font-monospace">{{ org.registration_reference or 'N/A' }}</td>
+              <td class="text-secondary">{{ org.city }}, {{ org.district }}</td>
+              <td>
+                <div class="text-muted" style="font-size: 11px;">
+                  <div><i class="bi bi-telephone me-1"></i>{{ org.contact_phone }}</div>
+                  <div><i class="bi bi-envelope me-1"></i>{{ org.contact_email or '-' }}</div>
+                </div>
+              </td>
+              <td>
+                <span class="badge {% if org.verification_status == 'VERIFIED' %}bg-success{% elif org.verification_status == 'PENDING' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                  {{ org.verification_status }}
+                </span>
+              </td>
+              <td class="pe-4 text-end">
+                {% if org.verification_status == 'PENDING' %}
+                <form action="{{ url_for('admin.verify_organization', org_id=org.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Approve verification for {{ org.organization_name }}?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-success btn-sm rounded-pill px-3 fw-bold" style="font-size: 11px;">
+                    <i class="bi bi-check-lg me-1"></i>Approve
+                  </button>
+                </form>
+                <form action="{{ url_for('admin.reject_organization', org_id=org.id) }}" method="POST" class="d-inline ms-1" onsubmit="return confirm('Reject verification for {{ org.organization_name }}?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2" style="font-size: 11px;">
+                    Reject
+                  </button>
+                </form>
+                {% else %}
+                <span class="text-muted small">Reviewed</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-muted small">
+        <i class="bi bi-building-check fs-1 d-block mb-2 text-secondary"></i>
+        No organizations found in this category.
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

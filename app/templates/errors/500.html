@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Internal Server Error (500) - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5 d-flex align-items-center">
+  <div class="container text-center" style="max-width: 500px;">
+    <div class="card card-saas p-5 bg-white border">
+      <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-crimson rounded-circle p-4 mb-3 mx-auto" style="width: 80px; height: 80px;">
+        <i class="bi bi-exclamation-triangle fs-1"></i>
+      </div>
+      <h3 class="fw-bold text-dark">Internal Server Error</h3>
+      <p class="text-secondary small leading-relaxed mb-4">
+        An unexpected server error occurred while processing your request. Database transactions have been safely rolled back.
+      </p>
+      <a href="{{ url_for('main.index') }}" class="btn btn-crimson rounded-pill px-4 fw-bold">
+        Return to Home Page
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

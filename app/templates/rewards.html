@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}Donor Rewards & Leaderboard - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="py-10 bg-slate-50">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+    
+    <!-- Hero Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 rounded-3xl p-8 sm:p-12 text-white shadow-xl relative overflow-hidden">
+      <div class="max-w-2xl space-y-4 relative z-10">
+        <span class="px-3 py-1 rounded-full bg-rose-500/30 text-rose-300 text-xs font-bold uppercase tracking-wider inline-block">
+          <i class="fa-solid fa-trophy mr-1.5"></i>Donor Retention &amp; Gamification
+        </span>
+        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Your Generosity Deserves Recognition</h1>
+        <p class="text-slate-300 text-sm leading-relaxed">
+          Every completed donation earns Lifesaver Points, unlocks honor badges, and grants redeemable healthcare vouchers, wellness perks, and city transit benefits.
+        </p>
+
+        {% if not current_user.is_authenticated %}
+        <div class="pt-2">
+          <a href="{{ url_for('auth.register') }}" class="inline-block px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs shadow-lg transition">
+            Join as Donor &amp; Get +50 Welcome Points
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="absolute right-6 -bottom-8 opacity-10 text-9xl hidden lg:block">
+        <i class="fa-solid fa-medal"></i>
+      </div>
+    </div>
+
+    <!-- User Status Banner (if logged in) -->
+    {% if current_user.is_authenticated and tier_data %}
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+      <div>
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">My Current Tier</span>
+        <div class="flex items-center space-x-3 mt-1">
+          <span class="text-2xl font-black text-slate-900">{{ tier_data.tier }}</span>
+          <span class="px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r {{ tier_data.badge_color }} text-white shadow-sm">
+            Active
+          </span>
+        </div>
+      </div>
+
+      <div>
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Available Balance</span>
+        <div class="text-3xl font-extrabold text-rose-600 brand-font mt-1">
+          {{ current_user.reward_points or 0 }} <span class="text-xs text-slate-500 font-bold">Points</span>
+        </div>
+      </div>
+
+      <div>
+        {% if tier_data.next_tier %}
+        <div class="space-y-1.5">
+          <div class="flex justify-between text-xs text-slate-500 font-semibold">
+            <span>Next: {{ tier_data.next_tier }}</span>
+            <span>{{ tier_data.points_to_next }} pts needed</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+            <div class="h-full bg-rose-600 rounded-full" style="width: {{ tier_data.progress_percent }}%"></div>
+          </div>
+        </div>
+        {% else %}
+        <span class="text-xs font-bold text-emerald-600"><i class="fa-solid fa-crown mr-1"></i>Top Tier Achieved!</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Redeemable Perks Store -->
+    <div>
+      <div class="mb-6">
+        <span class="text-xs font-bold text-rose-600 uppercase tracking-wider">Redeem Your Points</span>
+        <h2 class="text-2xl font-extrabold text-slate-900">Perks &amp; Healthcare Rewards</h2>
+        <p class="text-xs text-slate-500 mt-1">Select an item below to exchange your earned points for verified digital redemption vouchers.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for perk in rewards %}
+        <div class="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl shadow-sm">
+                <i class="fa-solid {{ perk.icon }}"></i>
+              </span>
+              <span class="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-black border border-amber-200">
+                {{ perk.points_cost }} Pts
+              </span>
+            </div>
+
+            <span class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block mb-1">{{ perk.category }}</span>
+            <h3 class="text-base font-bold text-slate-900 mb-2">{{ perk.title }}</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">{{ perk.description }}</p>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100">
+            {% if current_user.is_authenticated %}
+              {% if (current_user.reward_points or 0) >= perk.points_cost %}
+              <form action="{{ url_for('main.redeem_reward', reward_id=perk.id) }}" method="POST">
+                <button type="submit" onclick="return confirm('Redeem {{ perk.title }} for {{ perk.points_cost }} points?');" class="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow transition">
+                  <i class="fa-solid fa-gift mr-1.5"></i>Redeem Perk
+                </button>
+              </form>
+              {% else %}
+              <button disabled class="w-full py-2.5 bg-slate-100 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed">
+                Need {{ perk.points_cost - (current_user.reward_points or 0) }} more pts
+              </button>
+              {% endif %}
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="block text-center py-2.5 bg-slate-900 hover:bg-rose-600 text-white font-bold text-xs rounded-xl transition">
+              Sign In to Claim
+            </a>
+            {% endif %}
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Badges Showcase -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+      <div class="mb-6">
+        <span class="text-xs font-bold text-rose-600 uppercase tracking-wider">Achievements</span>
+        <h2 class="text-2xl font-extrabold text-slate-900">Honor Badges</h2>
+        <p class="text-xs text-slate-500 mt-1">Unlock badges automatically as you complete donations and answer critical emergency alerts.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {% for b in badges_definitions %}
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-2">
+          <div class="w-12 h-12 rounded-2xl bg-white shadow-sm mx-auto flex items-center justify-center text-2xl {{ b.color }}">
+            <i class="fa-solid {{ b.icon }}"></i>
+          </div>
+          <h4 class="font-bold text-slate-900 text-xs">{{ b.title }}</h4>
+          <p class="text-[11px] text-slate-500 leading-tight">{{ b.description }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Lifesaver Leaderboard -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <span class="text-xs font-bold text-rose-600 uppercase tracking-wider">Community Hall of Fame</span>
+          <h2 class="text-2xl font-extrabold text-slate-900">Top Donors Leaderboard</h2>
+        </div>
+        <i class="fa-solid fa-ranking-star text-2xl text-amber-500"></i>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs text-left">
+          <thead class="bg-slate-50 text-slate-500 uppercase font-bold border-b border-slate-200">
+            <tr>
+              <th class="p-3">Rank</th>
+              <th class="p-3">Donor</th>
+              <th class="p-3">Blood Group</th>
+              <th class="p-3">City</th>
+              <th class="p-3">Tier</th>
+              <th class="p-3 text-right">Points</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-slate-700">
+            {% for d in top_donors %}
+            <tr class="hover:bg-slate-50/60 transition">
+              <td class="p-3 font-bold">
+                {% if loop.index == 1 %}
+                <span class="w-6 h-6 rounded-full bg-amber-400 text-white font-extrabold inline-flex items-center justify-center shadow-sm">1</span>
+                {% elif loop.index == 2 %}
+                <span class="w-6 h-6 rounded-full bg-slate-300 text-slate-800 font-extrabold inline-flex items-center justify-center">2</span>
+                {% elif loop.index == 3 %}
+                <span class="w-6 h-6 rounded-full bg-amber-700 text-white font-extrabold inline-flex items-center justify-center">3</span>
+                {% else %}
+                <span class="text-slate-400 ml-1">#{{ loop.index }}</span>
+                {% endif %}
+              </td>
+              <td class="p-3 font-bold text-slate-900">{{ d.full_name }}</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded font-black text-rose-600 bg-rose-50 border border-rose-200">{{ d.blood_group }}</span></td>
+              <td class="p-3 text-slate-500">{{ d.city }}</td>
+              <td class="p-3"><span class="font-bold text-slate-700">{{ d.tier }}</span></td>
+              <td class="p-3 text-right font-extrabold text-rose-600 text-sm">{{ d.reward_points or 0 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

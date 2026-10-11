@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Donor Profile Preview - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container" style="max-width: 680px;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-danger bg-opacity-10 text-crimson fw-bold small mb-2">
+          <i class="bi bi-shield-check"></i>
+          <span>Authorized Clinical Coordination</span>
+        </div>
+        <h3 class="fw-bold text-navy mb-0">Restricted Donor Profile Preview</h3>
+        <small class="text-secondary">Summary record for preliminary transfusion assessment.</small>
+      </div>
+      <a href="{{ url_for('hospital.find_donors') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+        <i class="bi bi-arrow-left me-1"></i>Back to Search
+      </a>
+    </div>
+
+    <div class="card card-saas p-4 p-md-5 bg-white shadow-sm border">
+      <!-- Identity Header -->
+      <div class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
+        <div>
+          <h4 class="fw-bold text-navy mb-0">{{ display_name }}</h4>
+          <span class="badge bg-light text-secondary border mt-1">{{ donor_reference }}</span>
+        </div>
+        <span class="badge bg-danger bg-opacity-10 text-crimson fw-bold border border-danger border-opacity-25 fs-4 px-3 py-1">
+          {{ profile.declared_blood_group }}
+        </span>
+      </div>
+
+      <!-- Detail Grid -->
+      <div class="row g-4 mb-4">
+        <div class="col-sm-6">
+          <label class="text-secondary small fw-bold d-block">Location (Coarse):</label>
+          <span class="text-dark fw-semibold fs-6">
+            <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ profile.city or 'Not Specified' }}{% if profile.district %}, {{ profile.district }}{% endif %} ({{ profile.state }})
+          </span>
+        </div>
+        <div class="col-sm-6">
+          <label class="text-secondary small fw-bold d-block">Approximate Distance:</label>
+          <span class="text-dark fw-semibold fs-6">
+            <i class="bi bi-pin-map text-primary me-1"></i>
+            {% if distance_km is not none %}{{ "%.1f"|format(distance_km) }} km{% else %}Location not specified{% endif %}
+          </span>
+        </div>
+        <div class="col-sm-6">
+          <label class="text-secondary small fw-bold d-block">Availability Status:</label>
+          {% if profile.availability_status %}
+          <span class="badge bg-success text-white px-2.5 py-1">Available Now</span>
+          {% else %}
+          <span class="badge bg-secondary text-white px-2.5 py-1">Unavailable</span>
+          {% endif %}
+        </div>
+        <div class="col-sm-6">
+          <label class="text-secondary small fw-bold d-block">Platform Verification:</label>
+          <span class="badge bg-primary text-white px-2.5 py-1">Verified Voluntary Donor</span>
+        </div>
+        <div class="col-sm-6">
+          <label class="text-secondary small fw-bold d-block">Past Verified Donations:</label>
+          <span class="text-navy fw-bold fs-6">{{ donation_count }} donation(s)</span>
+        </div>
+        <div class="col-sm-6">
+          <label class="text-secondary small fw-bold d-block">Clinical Cooldown (56 days):</label>
+          {% if is_eligible %}
+          <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1">Eligible for Intake</span>
+          {% else %}
+          <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 text-dark px-2.5 py-1">
+            Active Cooldown ({{ cooldown_days }} days remaining)
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Disclaimers & Security Notice -->
+      <div class="p-3 rounded-3 bg-light border text-muted small mb-4">
+        <i class="bi bi-shield-lock-fill text-success me-1"></i>
+        <strong>Privacy Architecture Notice:</strong> Sensitive government documents, raw Aadhaar numbers, and exact home addresses are never accessible to requesting facilities. Communication and contact coordination occur exclusively via verified in-app messaging.
+      </div>
+
+      <div class="d-flex justify-content-end">
+        <a href="{{ url_for('hospital.find_donors') }}" class="btn btn-crimson btn-sm px-4 fw-semibold shadow-xs">
+          Return to Matching Donors
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

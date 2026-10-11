@@ -1,0 +1,386 @@
+{% extends 'base.html' %}
+
+{% block title %}Registration Verification Center - BloodLink AI Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container-fluid px-lg-5">
+
+    <!-- Header Row -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-danger bg-opacity-10 text-crimson fw-bold small mb-2">
+          <i class="bi bi-shield-check"></i>
+          <span>Administrative Trust &amp; Safety Compliance</span>
+        </div>
+        <h3 class="fw-bold text-navy mb-0">Registration Verification Center</h3>
+        <p class="text-secondary small mb-0">Audit voluntary donor identities, state hospital medical licenses, and accredited blood bank registries prior to granting operational clinical privileges.</p>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill">
+          <i class="bi bi-arrow-left me-1"></i>Admin Dashboard
+        </a>
+        <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-outline-dark btn-sm px-3 rounded-pill">
+          <i class="bi bi-clock-history me-1"></i>Audit Trails
+        </a>
+      </div>
+    </div>
+
+    <!-- Security & Privacy Disclaimer -->
+    <div class="alert alert-light border py-2.5 px-3 small d-flex align-items-center gap-2 mb-4 rounded-3 shadow-xs">
+      <i class="bi bi-lock-fill text-crimson fs-5 flex-shrink-0"></i>
+      <div style="font-size: 11px;">
+        <strong>Privacy-Preserving Verification Policy:</strong> Sensitive regulatory credentials and uploaded verification documents are stored in private isolated storage outside the public web tree. Zero raw identity documents or Aadhaar secrets are exposed to unauthorized users.
+      </div>
+    </div>
+
+    <!-- Category Tabs -->
+    <ul class="nav nav-pills gap-2 mb-4 p-2 bg-white rounded-3 border shadow-xs" id="verificationTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link py-2 px-3 fw-semibold small {% if active_tab == 'hospitals' %}active bg-crimson text-white{% else %}text-secondary{% endif %}" href="{{ url_for('admin.verifications', tab='hospitals') }}">
+          <i class="bi bi-hospital me-1.5"></i>Pending Hospitals ({{ pending_hospitals|length }})
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link py-2 px-3 fw-semibold small {% if active_tab == 'banks' %}active bg-crimson text-white{% else %}text-secondary{% endif %}" href="{{ url_for('admin.verifications', tab='banks') }}">
+          <i class="bi bi-building me-1.5"></i>Pending Blood Banks ({{ pending_banks|length }})
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link py-2 px-3 fw-semibold small {% if active_tab == 'donors' %}active bg-crimson text-white{% else %}text-secondary{% endif %}" href="{{ url_for('admin.verifications', tab='donors') }}">
+          <i class="bi bi-person-heart me-1.5"></i>Pending Donors ({{ pending_donors|length }})
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link py-2 px-3 fw-semibold small {% if active_tab == 'approved' %}active bg-crimson text-white{% else %}text-secondary{% endif %}" href="{{ url_for('admin.verifications', tab='approved') }}">
+          <i class="bi bi-check-circle me-1.5"></i>Approved Accounts ({{ approved_orgs|length }})
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link py-2 px-3 fw-semibold small {% if active_tab == 'rejected' %}active bg-crimson text-white{% else %}text-secondary{% endif %}" href="{{ url_for('admin.verifications', tab='rejected') }}">
+          <i class="bi bi-x-circle me-1.5"></i>Rejected Applications ({{ rejected_applications|length }})
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link py-2 px-3 fw-semibold small {% if active_tab == 'suspended' %}active bg-crimson text-white{% else %}text-secondary{% endif %}" href="{{ url_for('admin.verifications', tab='suspended') }}">
+          <i class="bi bi-slash-circle me-1.5"></i>Suspended Accounts ({{ suspended_accounts|length }})
+        </a>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+    {% if active_tab == 'hospitals' %}
+      <div class="row g-4">
+        {% if pending_hospitals %}
+          {% for org in pending_hospitals %}
+          <div class="col-lg-6">
+            <div class="card card-saas p-4 bg-white border h-100 shadow-xs d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-warning text-dark px-2.5 py-1">
+                  <i class="bi bi-hourglass-split me-1"></i>PENDING REVIEW
+                </span>
+                <small class="text-muted" style="font-size: 11px;">Registered: {{ org.created_at.strftime('%d %b %Y, %H:%M') }}</small>
+              </div>
+
+              <h5 class="fw-bold text-navy mb-1">{{ org.organization_name }}</h5>
+              <div class="small text-muted mb-2">
+                <i class="bi bi-geo-alt me-1 text-danger"></i>{{ org.address }}, {{ org.city }}, {{ org.state }}
+              </div>
+
+              <div class="p-3 rounded bg-light border mb-3 small">
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="text-secondary">Medical License Reference:</span>
+                  <strong class="text-navy">{{ org.registration_reference or 'Pending Upload' }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="text-secondary">Official Contact Phone:</span>
+                  <strong>{{ org.contact_phone }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span class="text-secondary">Official Contact Email:</span>
+                  <strong>{{ org.contact_email or '—' }}</strong>
+                </div>
+              </div>
+
+              <!-- Action buttons -->
+              <div class="mt-auto pt-3 border-top d-flex gap-2 justify-content-end flex-wrap">
+                <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#requestDocsModal{{ org.id }}">
+                  <i class="bi bi-file-earmark-plus me-1"></i>Request Docs
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectOrgModal{{ org.id }}">
+                  <i class="bi bi-x-circle me-1"></i>Reject
+                </button>
+                <form action="{{ url_for('admin.approve_organization_verification', org_id=org.id) }}" method="POST" onsubmit="return confirm('Approve verification for {{ org.organization_name }}?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-success btn-sm px-3 fw-bold">
+                    <i class="bi bi-check-lg me-1"></i>Approve Hospital
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reject Modal -->
+          <div class="modal fade" id="rejectOrgModal{{ org.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+              <div class="modal-content border-0 shadow">
+                <div class="modal-header py-2.5 px-3 bg-danger text-white">
+                  <h6 class="modal-title fw-bold" style="font-size: 13px;">Reject Application</h6>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('admin.reject_organization_verification', org_id=org.id) }}" method="POST">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <div class="modal-body p-3">
+                    <label class="form-label small fw-semibold text-secondary">Documented Rejection Reason *</label>
+                    <textarea name="reason" rows="3" class="form-control form-control-sm" placeholder="Specify why the medical credentials could not be verified..." required></textarea>
+                  </div>
+                  <div class="modal-footer py-2 px-3 bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger btn-sm fw-bold">Confirm Rejection</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Request Docs Modal -->
+          <div class="modal fade" id="requestDocsModal{{ org.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+              <div class="modal-content border-0 shadow">
+                <div class="modal-header py-2.5 px-3 bg-light">
+                  <h6 class="modal-title fw-bold text-navy" style="font-size: 13px;">Request Additional Documentation</h6>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('admin.request_organization_docs', org_id=org.id) }}" method="POST">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <div class="modal-body p-3">
+                    <label class="form-label small fw-semibold text-secondary">Notes on Missing Items</label>
+                    <textarea name="notes" rows="3" class="form-control form-control-sm" placeholder="e.g. State medical registration certificate signature not legible..." required></textarea>
+                  </div>
+                  <div class="modal-footer py-2 px-3 bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning btn-sm fw-bold">Send Request</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          {% endfor %}
+        {% else %}
+          <div class="col-12 text-center py-5 text-muted small bg-white rounded-3 border">
+            <i class="bi bi-check2-circle text-success fs-1 d-block mb-2"></i>
+            All hospital registration applications have been audited. No pending hospital reviews.
+          </div>
+        {% endif %}
+      </div>
+
+    {% elif active_tab == 'banks' %}
+      <div class="row g-4">
+        {% if pending_banks %}
+          {% for org in pending_banks %}
+          <div class="col-lg-6">
+            <div class="card card-saas p-4 bg-white border h-100 shadow-xs d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-warning text-dark px-2.5 py-1">
+                  <i class="bi bi-hourglass-split me-1"></i>PENDING REVIEW
+                </span>
+                <small class="text-muted" style="font-size: 11px;">Registered: {{ org.created_at.strftime('%d %b %Y, %H:%M') }}</small>
+              </div>
+
+              <h5 class="fw-bold text-navy mb-1">{{ org.organization_name }}</h5>
+              <div class="small text-muted mb-2">
+                <i class="bi bi-building me-1 text-primary"></i>Blood Bank Facility &bull; {{ org.city }}, {{ org.state }}
+              </div>
+
+              <div class="p-3 rounded bg-light border mb-3 small">
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="text-secondary">Blood Bank Registry Code:</span>
+                  <strong class="text-navy">{{ org.registration_reference or 'Pending Code' }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="text-secondary">Facility Phone:</span>
+                  <strong>{{ org.contact_phone }}</strong>
+                </div>
+              </div>
+
+              <div class="mt-auto pt-3 border-top d-flex gap-2 justify-content-end flex-wrap">
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectBankModal{{ org.id }}">
+                  <i class="bi bi-x-circle me-1"></i>Reject
+                </button>
+                <form action="{{ url_for('admin.approve_organization_verification', org_id=org.id) }}" method="POST" onsubmit="return confirm('Approve verification for {{ org.organization_name }}?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-success btn-sm px-3 fw-bold">
+                    <i class="bi bi-check-lg me-1"></i>Approve Blood Bank
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="col-12 text-center py-5 text-muted small bg-white rounded-3 border">
+            <i class="bi bi-check2-circle text-success fs-1 d-block mb-2"></i>
+            All blood bank registration applications have been audited. No pending blood bank reviews.
+          </div>
+        {% endif %}
+      </div>
+
+    {% elif active_tab == 'donors' %}
+      <div class="row g-4">
+        {% if pending_donors %}
+          {% for profile in pending_donors %}
+          <div class="col-lg-6">
+            <div class="card card-saas p-4 bg-white border h-100 shadow-xs d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="badge bg-warning text-dark px-2.5 py-1">
+                  {{ profile.verification_status }}
+                </span>
+                <span class="badge bg-danger bg-opacity-10 text-crimson fw-bold">{{ profile.declared_blood_group }}</span>
+              </div>
+
+              <h5 class="fw-bold text-navy mb-1">{{ profile.user.name }}</h5>
+              <div class="small text-muted mb-2">
+                <i class="bi bi-envelope me-1"></i>{{ profile.user.email }} &bull; <i class="bi bi-telephone ms-2 me-1"></i>{{ profile.phone or '—' }}
+              </div>
+              <div class="small text-secondary mb-3">
+                <i class="bi bi-geo-alt me-1 text-danger"></i>{{ profile.city }}, {{ profile.district }}, {{ profile.state }}
+              </div>
+
+              <div class="mt-auto pt-3 border-top d-flex gap-2 justify-content-end">
+                <form action="{{ url_for('admin.reject_donor_verification', donor_id=profile.user_id) }}" method="POST" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="reason" value="Identity documentation mismatch">
+                  <button type="submit" class="btn btn-outline-danger btn-sm">Reject</button>
+                </form>
+                <form action="{{ url_for('admin.approve_donor_verification', donor_id=profile.user_id) }}" method="POST" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-success btn-sm px-3 fw-bold">Approve Donor</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="col-12 text-center py-5 text-muted small bg-white rounded-3 border">
+            <i class="bi bi-check2-circle text-success fs-1 d-block mb-2"></i>
+            No donors currently pending manual verification.
+          </div>
+        {% endif %}
+      </div>
+
+    {% elif active_tab == 'approved' %}
+      <div class="card card-saas p-4 bg-white border shadow-xs">
+        <h5 class="fw-bold text-navy mb-3 pb-2 border-bottom">Accredited &amp; Approved Facilities</h5>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+              <tr>
+                <th>Facility Name</th>
+                <th>Type</th>
+                <th>Location</th>
+                <th>Accreditation Ref</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for org in approved_orgs %}
+              <tr>
+                <td class="fw-bold text-navy">{{ org.organization_name }}</td>
+                <td><span class="badge bg-light text-dark border">{{ org.organization_type }}</span></td>
+                <td>{{ org.city }}, {{ org.state }}</td>
+                <td><code>{{ org.registration_reference or 'REG-VERIFIED' }}</code></td>
+                <td><span class="badge bg-success">APPROVED</span></td>
+                <td class="text-end">
+                  <form action="{{ url_for('admin.suspend_organization', org_id=org.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Suspend privileges for {{ org.organization_name }}?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm py-0.5 px-2 text-danger" style="font-size: 11px;">
+                      Suspend
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    {% elif active_tab == 'rejected' %}
+      <div class="card card-saas p-4 bg-white border shadow-xs">
+        <h5 class="fw-bold text-navy mb-3 pb-2 border-bottom">Rejected Applications</h5>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+              <tr>
+                <th>Applicant / Facility</th>
+                <th>Type</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th class="text-end">Re-audit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for org in rejected_applications %}
+              <tr>
+                <td class="fw-bold text-navy">{{ org.organization_name }}</td>
+                <td><span class="badge bg-light text-dark border">{{ org.organization_type }}</span></td>
+                <td>{{ org.city }}, {{ org.state }}</td>
+                <td><span class="badge bg-danger">REJECTED</span></td>
+                <td class="text-end">
+                  <form action="{{ url_for('admin.approve_organization_verification', org_id=org.id) }}" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline-success btn-sm py-0.5 px-2" style="font-size: 11px;">
+                      Re-approve
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    {% elif active_tab == 'suspended' %}
+      <div class="card card-saas p-4 bg-white border shadow-xs">
+        <h5 class="fw-bold text-navy mb-3 pb-2 border-bottom">Suspended Accounts</h5>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+              <tr>
+                <th>Facility Name</th>
+                <th>Type</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th class="text-end">Restoration</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for org in suspended_accounts %}
+              <tr>
+                <td class="fw-bold text-navy">{{ org.organization_name }}</td>
+                <td><span class="badge bg-light text-dark border">{{ org.organization_type }}</span></td>
+                <td>{{ org.city }}, {{ org.state }}</td>
+                <td><span class="badge bg-dark">SUSPENDED</span></td>
+                <td class="text-end">
+                  <form action="{{ url_for('admin.restore_organization', org_id=org.id) }}" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-success btn-sm py-0.5 px-2.5" style="font-size: 11px;">
+                      Restore Account
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

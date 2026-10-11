@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Donor Management - BloodLink AI Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container">
+    
+    <!-- Top Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-danger bg-opacity-10 text-crimson fw-bold small mb-2">
+          <i class="bi bi-people-fill"></i>
+          <span>Voluntary Lifesaver Registry</span>
+        </div>
+        <h4 class="fw-bold text-dark mb-0">Donor Directory &amp; Management Console</h4>
+        <small class="text-secondary">Inspect verified donor profiles, administrative districts, availability, and ABO distribution.</small>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.users', role='DONOR') }}" class="btn btn-crimson btn-sm rounded-pill px-3">
+          <i class="bi bi-shield-lock me-1"></i>Security Controls
+        </a>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+          <i class="bi bi-arrow-left me-1"></i>Back to Console
+        </a>
+      </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="card card-saas p-3 mb-4 bg-white border shadow-sm">
+      <form action="{{ url_for('admin.donors') }}" method="GET" class="row g-2 align-items-center">
+        
+        <div class="col-md-4">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text bg-light text-muted"><i class="bi bi-search"></i></span>
+            <input type="text" name="q" value="{{ search or '' }}" placeholder="Search name, email, city, phone..." class="form-control">
+          </div>
+        </div>
+
+        <div class="col-md-2 col-6">
+          <select name="blood_group" class="form-select form-select-sm">
+            <option value="">All Blood Groups</option>
+            {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+            <option value="{{ bg }}" {% if selected_bg == bg %}selected{% endif %}>{{ bg }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3 col-6">
+          <select name="state" class="form-select form-select-sm">
+            <option value="">All States &amp; UTs</option>
+            {% for st in all_states %}
+            <option value="{{ st }}" {% if selected_state == st %}selected{% endif %}>{{ st }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2 col-6">
+          <select name="availability" class="form-select form-select-sm">
+            <option value="">All Statuses</option>
+            <option value="AVAILABLE" {% if selected_availability == 'AVAILABLE' %}selected{% endif %}>Available Only</option>
+            <option value="UNAVAILABLE" {% if selected_availability == 'UNAVAILABLE' %}selected{% endif %}>Unavailable Only</option>
+          </select>
+        </div>
+
+        <div class="col-md-1 col-6 d-flex gap-1">
+          <button type="submit" class="btn btn-crimson btn-sm w-100 fw-bold">Filter</button>
+          {% if search or selected_bg or selected_state or selected_availability %}
+          <a href="{{ url_for('admin.donors') }}" class="btn btn-outline-secondary btn-sm" title="Clear Filters"><i class="bi bi-x-lg"></i></a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+
+    <!-- Donors Table -->
+    <div class="card card-saas p-0 overflow-hidden bg-white shadow-sm border mb-4">
+      {% if donors %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th class="ps-4">Donor Name &amp; Email</th>
+              <th>Blood Group</th>
+              <th>Location</th>
+              <th>Contact Phone</th>
+              <th>Availability</th>
+              <th>Reward Points</th>
+              <th>Registered On</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in donors %}
+            <tr>
+              <td class="ps-4">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-crimson rounded-circle fw-bold" style="width: 34px; height: 34px; font-size: 12px;">
+                    {{ d.declared_blood_group }}
+                  </div>
+                  <div>
+                    <strong class="text-dark d-block">
+                      {{ d.user.name }}
+                      {% if not d.user.is_active %}
+                      <span class="badge bg-danger ms-1" style="font-size: 9px;">Suspended</span>
+                      {% elif d.user.is_temporarily_locked() %}
+                      <span class="badge bg-warning text-dark ms-1" style="font-size: 9px;">Locked</span>
+                      {% endif %}
+                    </strong>
+                    <small class="text-muted">{{ d.user.email }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge bg-danger bg-opacity-10 text-crimson border border-danger border-opacity-25 fw-bold px-2.5 py-1">
+                  {{ d.declared_blood_group }}
+                </span>
+              </td>
+              <td>
+                <div class="text-dark fw-medium">{{ d.city or '—' }}</div>
+                <small class="text-muted">{{ d.district or '' }}{% if d.district and d.state %}, {% endif %}{{ d.state or '' }}</small>
+              </td>
+              <td>
+                {% if d.phone %}
+                <span class="text-dark"><i class="bi bi-telephone text-muted me-1"></i>{{ d.phone }}</span>
+                {% else %}
+                <span class="text-muted fst-italic">Not provided</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if d.availability_status %}
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
+                  <i class="bi bi-check-circle-fill me-1"></i>Available
+                </span>
+                {% else %}
+                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1">
+                  <i class="bi bi-pause-circle me-1"></i>Unavailable
+                </span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="fw-bold text-crimson">{{ d.user.reward_balance }} Pts</span>
+              </td>
+              <td class="text-muted">
+                {{ d.user.created_at.strftime('%d %b %Y') if d.user.created_at else '—' }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if pagination and pagination.pages > 1 %}
+      <div class="p-3 border-top d-flex justify-content-between align-items-center">
+        <small class="text-muted">
+          Showing page {{ pagination.page }} of {{ pagination.pages }} ({{ pagination.total }} total registered donors)
+        </small>
+        <nav aria-label="Donor pagination">
+          <ul class="pagination pagination-sm mb-0">
+            {% if pagination.has_prev %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('admin.donors', page=pagination.prev_num, q=search, blood_group=selected_bg, state=selected_state, availability=selected_availability) }}">&laquo; Prev</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo; Prev</span></li>
+            {% endif %}
+
+            {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+              {% if p %}
+                {% if p == pagination.page %}
+                <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('admin.donors', page=p, q=search, blood_group=selected_bg, state=selected_state, availability=selected_availability) }}">{{ p }}</a></li>
+                {% endif %}
+              {% else %}
+                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+              {% endif %}
+            {% endfor %}
+
+            {% if pagination.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('admin.donors', page=pagination.next_num, q=search, blood_group=selected_bg, state=selected_state, availability=selected_availability) }}">Next &raquo;</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      {% endif %}
+
+      {% else %}
+      <!-- Empty State -->
+      <div class="p-5 text-center text-muted">
+        <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle p-3 mb-3" style="width: 60px; height: 60px;">
+          <i class="bi bi-people fs-3 text-secondary"></i>
+        </div>
+        <h6 class="fw-bold text-dark">No Donors Found</h6>
+        <p class="small text-secondary mb-3">No donor records match your specified search filter criteria.</p>
+        {% if search or selected_bg or selected_state or selected_availability %}
+        <a href="{{ url_for('admin.donors') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+          Clear All Filters
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

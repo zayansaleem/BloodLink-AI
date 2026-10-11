@@ -1,0 +1,418 @@
+{% extends 'base.html' %}
+
+{% block title %}Find Blood. Find Hope. - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container">
+    
+    <!-- Page Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4">
+      <div>
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-danger bg-opacity-10 text-crimson fw-bold small mb-2 border border-danger border-opacity-20">
+          <i class="bi bi-geo-alt-fill"></i>
+          <span>Nationwide Blood Grid &bull; 28 States &amp; 8 UTs</span>
+        </div>
+        <h1 class="display-6 fw-extrabold text-navy mb-1">Find Blood. Find Hope.</h1>
+        <p class="text-secondary small mb-0"><strong class="text-dark">Blood Availability Search</strong> &bull; Search participating blood banks by blood group, component, and location with real-time stock transparency.</p>
+      </div>
+      <div class="mt-3 mt-md-0 d-flex gap-2">
+        <a href="{{ url_for('main.blood_banks') }}" class="btn btn-outline-crimson btn-sm px-3 shadow-xs">
+          <i class="bi bi-hospital me-1"></i>Blood Banks Directory
+        </a>
+        <a href="{{ url_for('main.map_view') }}" class="btn btn-navy btn-sm px-3 shadow-xs">
+          <i class="bi bi-map me-1"></i>Interactive Map
+        </a>
+      </div>
+    </div>
+
+    <!-- Clinical Protocol Notice -->
+    <div class="alert alert-warning card-saas py-2.5 px-3 small d-flex align-items-center gap-2 mb-4 border-warning border-opacity-40" role="alert">
+      <i class="bi bi-shield-exclamation text-warning fs-5"></i>
+      <span><strong>Clinical Protocol Notice:</strong> Reported available units reflect laboratory database reserves. Pathological cross-matching, antibody screening, and compatibility confirmation by certified facility staff are required prior to transfusion.</span>
+    </div>
+
+    <!-- Search Panel Card -->
+    <div class="card card-saas p-4 mb-4 bg-white shadow-sm border">
+      <form action="{{ url_for('main.search') }}" method="GET" id="searchFilterForm">
+        
+        <!-- Search Scope Selector & Clear Filters -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 pb-3 border-bottom">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="small fw-bold text-navy"><i class="bi bi-sliders me-1 text-crimson"></i>Search Scope:</span>
+            
+            <input type="radio" class="btn-check" name="scope" id="scope_district" value="district" {% if selected_scope == 'district' or not selected_scope %}checked{% endif %}>
+            <label class="scope-radio-btn" for="scope_district">
+              <i class="bi bi-pin-map-fill text-danger"></i>District Precision
+            </label>
+
+            <input type="radio" class="btn-check" name="scope" id="scope_state" value="state" {% if selected_scope == 'state' %}checked{% endif %}>
+            <label class="scope-radio-btn" for="scope_state">
+              <i class="bi bi-diagram-3-fill text-primary"></i>State Level
+            </label>
+
+            <input type="radio" class="btn-check" name="scope" id="scope_all_india" value="all_india" {% if selected_scope == 'all_india' %}checked{% endif %}>
+            <label class="scope-radio-btn" for="scope_all_india">
+              <i class="bi bi-globe-central-south-asia text-success"></i>All India
+            </label>
+          </div>
+
+          {% if selected_state or selected_district or selected_city or selected_group or selected_comp %}
+          <a href="{{ url_for('main.search') }}" class="btn btn-outline-danger btn-sm px-3 rounded-pill">
+            <i class="bi bi-x-circle me-1"></i>Clear All Filters
+          </a>
+          {% endif %}
+        </div>
+
+        <!-- Filter Dropdowns Row -->
+        <div class="row g-3">
+          <!-- Blood Group -->
+          <div class="col-md-3 col-sm-6">
+            <label class="form-label small fw-bold text-secondary">Blood Group</label>
+            <select name="blood_group" class="form-select fw-bold text-dark">
+              <option value="">All Blood Groups</option>
+              {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+              <option value="{{ bg }}" {% if selected_group == bg %}selected{% endif %}>{{ bg }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Component Type -->
+          <div class="col-md-3 col-sm-6">
+            <label class="form-label small fw-bold text-secondary">Blood Component</label>
+            <select name="component_type" class="form-select">
+              <option value="">All Components</option>
+              <option value="Whole Blood" {% if selected_comp == 'Whole Blood' %}selected{% endif %}>Whole Blood</option>
+              <option value="Red Blood Cells" {% if selected_comp == 'Red Blood Cells' %}selected{% endif %}>Red Blood Cells (PRBC)</option>
+              <option value="Platelets" {% if selected_comp == 'Platelets' %}selected{% endif %}>Platelets (RDP/SDP)</option>
+              <option value="Plasma" {% if selected_comp == 'Plasma' %}selected{% endif %}>Fresh Frozen Plasma (FFP)</option>
+            </select>
+          </div>
+
+          <!-- State Dropdown -->
+          <div class="col-md-3 col-sm-6">
+            <label class="form-label small fw-bold text-secondary">State / Union Territory</label>
+            <select name="state" id="search_state" class="form-select">
+              <option value="">-- All India (Select State) --</option>
+              {% for st in all_indian_states %}
+              <option value="{{ st }}" {% if selected_state == st %}selected{% endif %}>{{ st }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- District Dropdown -->
+          <div class="col-md-3 col-sm-6">
+            <label class="form-label small fw-bold text-secondary">District</label>
+            <select name="district" id="search_district" class="form-select">
+              <option value="">-- All Districts --</option>
+              {% for d in available_districts %}
+              <option value="{{ d }}" {% if selected_district == d %}selected{% endif %}>{{ d }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- City & Units Row -->
+        <div class="row g-3 mt-1 align-items-end">
+          <div class="col-md-4 col-sm-6">
+            <label class="form-label small fw-bold text-secondary">City / Town (Optional)</label>
+            <input type="text" name="city" id="search_city" value="{{ selected_city or '' }}" placeholder="e.g. Pune, Mysuru, Kozhikode" class="form-control">
+          </div>
+
+          <div class="col-md-3 col-sm-6">
+            <label class="form-label small fw-bold text-secondary">Min Units Required</label>
+            <input type="number" name="units" min="1" max="50" value="{{ units_filter }}" class="form-control">
+          </div>
+
+          <div class="col-md-5 d-flex gap-2 justify-content-end">
+            <button type="submit" class="btn btn-crimson px-4 fw-bold shadow-xs">
+              <i class="bi bi-search me-1"></i>Search Inventory
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Active Filters Summary Badge Strip -->
+    {% if selected_state or selected_district or selected_city or selected_group or selected_comp %}
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+      <span class="small text-muted fw-semibold">Active Filter Criteria:</span>
+      {% if selected_scope %}
+      <span class="badge bg-dark rounded-pill px-3 py-1.5">Scope: {{ selected_scope|capitalize }}</span>
+      {% endif %}
+      {% if selected_state %}
+      <span class="badge bg-danger bg-opacity-10 text-crimson border border-danger border-opacity-25 rounded-pill px-3 py-1.5">State: {{ selected_state }}</span>
+      {% endif %}
+      {% if selected_district %}
+      <span class="badge bg-danger bg-opacity-10 text-crimson border border-danger border-opacity-25 rounded-pill px-3 py-1.5">District: {{ selected_district }}</span>
+      {% endif %}
+      {% if selected_city %}
+      <span class="badge bg-light text-dark border rounded-pill px-3 py-1.5">City: {{ selected_city }}</span>
+      {% endif %}
+      {% if selected_group %}
+      <span class="badge bg-danger rounded-pill px-3 py-1.5">Group: {{ selected_group }}</span>
+      {% endif %}
+      {% if selected_comp %}
+      <span class="badge bg-primary rounded-pill px-3 py-1.5">Component: {{ selected_comp }}</span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Results Toolbar: Counter, View Mode & Page Size -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <span class="small fw-bold text-navy">
+          <i class="bi bi-card-checklist me-1 text-crimson"></i>Found <strong>{{ total_count }}</strong> matching reported inventory record(s)
+        </span>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        <!-- Page size selector -->
+        <div class="d-flex align-items-center gap-1.5 small text-muted">
+          <span>Per page:</span>
+          <div class="btn-group btn-group-sm" role="group">
+            {% for ps in [12, 24, 48] %}
+            <a href="{{ url_for('main.search', per_page=ps, view=view_mode, state=selected_state, district=selected_district, city=selected_city, blood_group=selected_group, component_type=selected_comp, scope=selected_scope, units=units_filter) }}" 
+               class="btn {% if per_page == ps %}btn-danger text-white{% else %}btn-outline-secondary{% endif %} py-0.5 px-2">
+              {{ ps }}
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- View mode toggle -->
+        <div class="btn-group btn-group-sm" role="group" aria-label="View toggle">
+          <a href="{{ url_for('main.search', view='cards', per_page=per_page, state=selected_state, district=selected_district, city=selected_city, blood_group=selected_group, component_type=selected_comp, scope=selected_scope, units=units_filter) }}" 
+             class="btn {% if view_mode != 'table' %}btn-danger text-white{% else %}btn-outline-secondary{% endif %}" title="Card Grid View">
+            <i class="bi bi-grid-fill me-1"></i>Cards
+          </a>
+          <a href="{{ url_for('main.search', view='table', per_page=per_page, state=selected_state, district=selected_district, city=selected_city, blood_group=selected_group, component_type=selected_comp, scope=selected_scope, units=units_filter) }}" 
+             class="btn {% if view_mode == 'table' %}btn-danger text-white{% else %}btn-outline-secondary{% endif %}" title="Compact Table View">
+            <i class="bi bi-table me-1"></i>Table
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory Results Grid or Table -->
+    {% if results %}
+      {% if view_mode == 'table' %}
+      <!-- Tabular Inventory View -->
+      <div class="card card-saas p-0 overflow-hidden bg-white shadow-sm border mb-4">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+          <span class="small fw-bold text-navy">
+            <i class="bi bi-table me-1 text-primary"></i>Tabular Inventory Breakdown
+          </span>
+          <small class="text-muted" style="font-size: 11px;">Page {{ page }} of {{ pagination.pages }} &bull; {{ total_count }} total entries</small>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+              <tr>
+                <th class="ps-4">Blood Bank Facility</th>
+                <th>State &bull; District &bull; City</th>
+                <th>Group</th>
+                <th>Component</th>
+                <th>Units Available</th>
+                <th>Last Updated</th>
+                <th class="pe-4 text-end">Contact</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in results %}
+              {% set inv = item[0] %}
+              {% set org = item[1] %}
+              <tr>
+                <td class="ps-4 fw-bold text-navy">
+                  {{ org.organization_name }}
+                  {% if org.is_demo %}
+                  <span class="badge bg-light text-muted border ms-1" style="font-size: 9px;">DEMO</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="d-block fw-semibold text-dark">{{ org.city }}</span>
+                  <span class="text-muted" style="font-size: 11px;">{{ org.district }}, {{ org.state }}</span>
+                </td>
+                <td>
+                  <span class="badge bg-danger bg-opacity-10 text-crimson border border-danger border-opacity-25 fw-bold px-2 py-1">
+                    {{ inv.blood_group }}
+                  </span>
+                </td>
+                <td class="text-secondary">{{ inv.component_type }}</td>
+                <td>
+                  {% if inv.available_units <= 2 %}
+                  <span class="badge bg-danger">{{ inv.available_units }} (Critical)</span>
+                  {% elif inv.available_units <= 5 %}
+                  <span class="badge bg-warning text-dark">{{ inv.available_units }} (Low)</span>
+                  {% else %}
+                  <span class="badge bg-success">{{ inv.available_units }} Units Available</span>
+                  {% endif %}
+                </td>
+                <td class="text-muted" style="font-size: 11px;">
+                  {{ inv.last_updated_at.strftime('%d %b %Y, %H:%M') }}
+                </td>
+                <td class="pe-4 text-end">
+                  <a href="tel:{{ org.contact_phone }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3" style="font-size: 11px;">
+                    <i class="bi bi-telephone-fill me-1 text-crimson"></i>{{ org.contact_phone }}
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% else %}
+      <!-- Card Grid View -->
+      <div class="row g-4 mb-4">
+        {% for item in results %}
+        {% set inv = item[0] %}
+        {% set org = item[1] %}
+        <div class="col-md-6 col-lg-4">
+          <div class="card card-saas p-4 h-100 card-hover-lift bg-white">
+            
+            <!-- Card Header: Blood Group & Stock Badge -->
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="d-flex align-items-center gap-2">
+                <span class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-crimson fw-extrabold rounded-3 px-3 py-1 fs-4 border border-danger border-opacity-25">
+                  {{ inv.blood_group }}
+                </span>
+                <div>
+                  <span class="badge bg-light text-navy border fw-bold" style="font-size: 11px;">{{ inv.component_type }}</span>
+                  <span class="d-block text-muted" style="font-size: 10px;">Verified Reserve</span>
+                </div>
+              </div>
+
+              <!-- Stock Status Pill -->
+              {% if inv.available_units <= 2 %}
+              <span class="stock-pill stock-pill-critical">
+                <i class="bi bi-exclamation-circle-fill"></i>{{ inv.available_units }} Units (Critical)
+              </span>
+              {% elif inv.available_units <= 5 %}
+              <span class="stock-pill stock-pill-limited">
+                <i class="bi bi-exclamation-triangle-fill"></i>{{ inv.available_units }} Units (Limited)
+              </span>
+              {% else %}
+              <span class="stock-pill stock-pill-available">
+                <i class="bi bi-check-circle-fill"></i>{{ inv.available_units }} Units Available
+              </span>
+              {% endif %}
+            </div>
+
+            <!-- Facility Name & Location -->
+            <h6 class="fw-bold text-navy mb-1">{{ org.organization_name }}</h6>
+            <p class="text-muted small mb-3">
+              <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ org.address }}, {{ org.city }}, {{ org.district or '' }} ({{ org.state }})
+            </p>
+
+            <!-- Facility Details & Last Updated -->
+            <div class="mt-auto pt-3 border-top">
+              <div class="d-flex justify-content-between align-items-center text-muted mb-3" style="font-size: 11px;">
+                <span>
+                  <i class="bi bi-calendar3 me-1"></i>Updated: {{ inv.last_updated_at.strftime('%d %b %Y, %H:%M') }}
+                  {% if inv.is_outdated %}
+                  <span class="badge bg-secondary ms-1">Outdated</span>
+                  {% endif %}
+                </span>
+                {% if org.is_demo %}
+                <span class="badge bg-light text-muted border">DEMO DATA</span>
+                {% endif %}
+              </div>
+
+              <div class="d-flex gap-2">
+                <a href="tel:{{ org.contact_phone }}" class="btn btn-crimson btn-sm flex-grow-1" style="font-size: 12px;">
+                  <i class="bi bi-telephone-fill me-1"></i>Call: {{ org.contact_phone }}
+                </a>
+                {% if org.latitude and org.longitude %}
+                <a href="https://www.google.com/maps/search/?api=1&query={{ org.latitude }},{{ org.longitude }}" target="_blank" rel="noopener noreferrer" class="btn btn-light btn-sm border" title="Get Directions" style="font-size: 12px;">
+                  <i class="bi bi-compass"></i>
+                </a>
+                {% endif %}
+              </div>
+            </div>
+
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Pagination Component -->
+      {% if pagination and pagination.pages > 1 %}
+      <nav class="d-flex justify-content-between align-items-center flex-wrap gap-2 my-4" aria-label="Search results pagination">
+        <small class="text-muted">
+          Showing page <strong>{{ pagination.page }}</strong> of <strong>{{ pagination.pages }}</strong> ({{ total_count }} total entries)
+        </small>
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('main.search', page=pagination.prev_num, per_page=per_page, view=view_mode, state=selected_state, district=selected_district, city=selected_city, blood_group=selected_group, component_type=selected_comp, scope=selected_scope, units=units_filter) }}">&laquo; Prev</a>
+          </li>
+          {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+              <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('main.search', page=p, per_page=per_page, view=view_mode, state=selected_state, district=selected_district, city=selected_city, blood_group=selected_group, component_type=selected_comp, scope=selected_scope, units=units_filter) }}">{{ p }}</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+            {% endif %}
+          {% endfor %}
+          <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('main.search', page=pagination.next_num, per_page=per_page, view=view_mode, state=selected_state, district=selected_district, city=selected_city, blood_group=selected_group, component_type=selected_comp, scope=selected_scope, units=units_filter) }}">Next &raquo;</a>
+          </li>
+        </ul>
+      </nav>
+      {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="card card-saas p-5 text-center bg-white border mb-4">
+      <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-crimson rounded-circle p-4 mx-auto mb-3" style="width: 72px; height: 72px;">
+        <i class="bi bi-search fs-2"></i>
+      </div>
+      <h4 class="fw-bold text-navy mb-2">No matching blood inventory found.</h4>
+      <p class="text-secondary small mb-4 mx-auto" style="max-width: 540px;">
+        {% if selected_district and selected_state %}
+          No reported blood inventory records found currently in <strong>{{ selected_district }}, {{ selected_state }}</strong>{% if selected_group %} for group <strong>{{ selected_group }}</strong>{% endif %}.
+          Blood availability reflects licensed collection facilities. You can expand your search to the entire state of <strong>{{ selected_state }}</strong> or search nationwide.
+        {% elif selected_state %}
+          No reported inventory records found across <strong>{{ selected_state }}</strong>{% if selected_group %} for group <strong>{{ selected_group }}</strong>{% endif %}. Try expanding your search nationwide.
+        {% else %}
+          There are currently no reported inventory units matching your specific filters. Try expanding your search scope or resetting filters.
+        {% endif %}
+      </p>
+
+      <div class="d-flex flex-wrap justify-content-center gap-3">
+        {% if selected_state and selected_scope == 'district' %}
+        <a href="{{ url_for('main.search', scope='state', state=selected_state, blood_group=selected_group or '', component_type=selected_comp or '') }}" class="btn btn-crimson btn-sm px-4">
+          <i class="bi bi-diagram-3 me-1"></i>Expand to Entire {{ selected_state }}
+        </a>
+        {% endif %}
+        <a href="{{ url_for('main.search', scope='all_india', blood_group=selected_group or '', component_type=selected_comp or '') }}" class="btn btn-navy btn-sm px-4">
+          <i class="bi bi-globe-central-south-asia me-1"></i>Search All India
+        </a>
+        <a href="{{ url_for('main.search') }}" class="btn btn-outline-secondary btn-sm px-4">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>Reset All Filters
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    initLocationCascade(
+      'search_state',
+      'search_district',
+      'search_city',
+      '{{ selected_district or "" }}',
+      '{{ selected_city or "" }}',
+      true
+    );
+  });
+</script>
+{% endblock %}

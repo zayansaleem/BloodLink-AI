@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}Administrator Dashboard - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  
+  <!-- Sidebar Navigation -->
+  <aside class="dashboard-sidebar">
+    <div class="text-center pb-3 mb-3 border-bottom">
+      <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-circle fs-3 mb-2" style="width: 64px; height: 64px;">
+        <i class="bi bi-shield-lock"></i>
+      </div>
+      <h6 class="fw-bold text-navy mb-0">{{ current_user.name }}</h6>
+      <small class="text-muted d-block" style="font-size: 11px;">Platform Super Administrator</small>
+      <span class="badge bg-danger rounded-pill px-2.5 py-1 mt-2 small" style="font-size: 10px;">
+        Root Governance
+      </span>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-grow-1">
+      <a href="{{ url_for('admin.dashboard') }}" class="sidebar-nav-link active">
+        <i class="bi bi-grid-fill"></i>Admin Console
+      </a>
+      <a href="{{ url_for('admin.donors') }}" class="sidebar-nav-link">
+        <i class="bi bi-people-fill text-crimson"></i>Donor Management
+      </a>
+      <a href="{{ url_for('admin.users') }}" class="sidebar-nav-link">
+        <i class="bi bi-person-badge-fill text-primary"></i>User Governance
+      </a>
+      <a href="{{ url_for('admin.verifications') }}" class="sidebar-nav-link">
+        <i class="bi bi-patch-check-fill text-success"></i>Verification Center
+        {% if pending_orgs > 0 %}
+        <span class="badge bg-danger ms-auto">{{ pending_orgs }}</span>
+        {% endif %}
+      </a>
+      <a href="{{ url_for('admin.organizations') }}" class="sidebar-nav-link">
+        <i class="bi bi-building-check"></i>Organization Directory
+      </a>
+      <a href="{{ url_for('admin.requests') }}" class="sidebar-nav-link">
+        <i class="bi bi-clipboard2-pulse"></i>Request Verifications
+        {% if pending_requests > 0 %}
+        <span class="badge bg-warning text-dark ms-auto">{{ pending_requests }}</span>
+        {% endif %}
+      </a>
+      <a href="{{ url_for('admin.analytics') }}" class="sidebar-nav-link">
+        <i class="bi bi-bar-chart-line-fill text-primary"></i>Platform Analytics
+      </a>
+      <a href="{{ url_for('admin.coupons') }}" class="sidebar-nav-link">
+        <i class="bi bi-gift-fill text-warning"></i>Coupon Marketplace
+      </a>
+      <a href="{{ url_for('admin.audit_logs') }}" class="sidebar-nav-link">
+        <i class="bi bi-journal-text"></i>Audit Trails
+      </a>
+    </nav>
+
+    <!-- Audit Status -->
+    <div class="p-3 rounded-3 bg-light-page border mt-auto text-muted" style="font-size: 11px;">
+      <span class="d-block fw-bold text-navy mb-1"><i class="bi bi-shield-fill-check text-success me-1"></i>Security Protocol:</span>
+      <span class="d-block">Role-based access control &amp; immutable audit logging enabled.</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="dashboard-main">
+    
+    <!-- Welcome Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <h3 class="fw-bold text-navy mb-0">Platform Administration Console</h3>
+        <p class="text-secondary small mb-0">Manage nationwide facility accreditations, audit logs, emergency requests, and analytics.</p>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.organizations') }}" class="btn btn-crimson btn-sm px-3 shadow-xs">
+          <i class="bi bi-building-check me-1"></i>Review Orgs
+          {% if pending_orgs > 0 %}
+          <span class="badge bg-white text-crimson ms-1">{{ pending_orgs }}</span>
+          {% endif %}
+        </a>
+        <a href="{{ url_for('admin.requests') }}" class="btn btn-outline-primary btn-sm px-3">
+          <i class="bi bi-clipboard-pulse me-1"></i>Review Requests
+          {% if pending_requests > 0 %}
+          <span class="badge bg-warning text-dark ms-1">{{ pending_requests }}</span>
+          {% endif %}
+        </a>
+      </div>
+    </div>
+
+    <!-- Summary Metrics Grid -->
+    <div class="row g-4 mb-4">
+      <div class="col-6 col-md-4 col-lg-2">
+        <a href="{{ url_for('admin.donors') }}" class="card card-saas p-3 bg-white text-center h-100 text-decoration-none card-hover-lift d-block">
+          <span class="small fw-bold text-secondary text-uppercase" style="font-size: 10px;">Donors</span>
+          <div class="fs-3 fw-bold text-crimson my-1">{{ total_donors }}</div>
+          <small class="text-muted" style="font-size: 11px;">Voluntary Users &rarr;</small>
+        </a>
+      </div>
+
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="card card-saas p-3 bg-white text-center h-100">
+          <span class="small fw-bold text-secondary text-uppercase" style="font-size: 10px;">Hospitals</span>
+          <div class="fs-3 fw-bold text-primary my-1">{{ total_hospitals }}</div>
+          <small class="text-muted" style="font-size: 11px;">Clinical Centers</small>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="card card-saas p-3 bg-white text-center h-100">
+          <span class="small fw-bold text-secondary text-uppercase" style="font-size: 10px;">Blood Banks</span>
+          <div class="fs-3 fw-bold text-navy my-1">{{ total_banks }}</div>
+          <small class="text-muted" style="font-size: 11px;">Laboratories</small>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="card card-saas p-3 bg-white text-center h-100">
+          <span class="small fw-bold text-secondary text-uppercase" style="font-size: 10px;">Pending Orgs</span>
+          <div class="fs-3 fw-bold text-danger my-1">{{ pending_orgs }}</div>
+          <small class="text-muted" style="font-size: 11px;">Require Sign-off</small>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="card card-saas p-3 bg-white text-center h-100">
+          <span class="small fw-bold text-secondary text-uppercase" style="font-size: 10px;">Pending Reqs</span>
+          <div class="fs-3 fw-bold text-warning my-1">{{ pending_requests }}</div>
+          <small class="text-muted" style="font-size: 11px;">Triage Review</small>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="card card-saas p-3 bg-white text-center h-100">
+          <span class="small fw-bold text-secondary text-uppercase" style="font-size: 10px;">Active Verified</span>
+          <div class="fs-3 fw-bold text-success my-1">{{ active_verified_requests }}</div>
+          <small class="text-muted" style="font-size: 11px;">Matching Live</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Navigation Cards -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-4">
+        <div class="card card-saas p-4 bg-white h-100 d-flex flex-column justify-content-between">
+          <div>
+            <h6 class="fw-bold text-navy mb-2"><i class="bi bi-gift-fill text-warning me-2"></i>Coupon Marketplace</h6>
+            <p class="text-secondary small mb-3">Add and configure partner discount vouchers and health checkup incentives for voluntary donors.</p>
+          </div>
+          <a href="{{ url_for('admin.coupons') }}" class="btn btn-outline-warning text-dark btn-sm rounded-pill fw-bold align-self-start">
+            Manage Coupons &rarr;
+          </a>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card card-saas p-4 bg-white h-100 d-flex flex-column justify-content-between">
+          <div>
+            <h6 class="fw-bold text-navy mb-2"><i class="bi bi-bar-chart-line-fill text-primary me-2"></i>Pan-India Analytics</h6>
+            <p class="text-secondary small mb-3">Inspect blood group demand distribution, geographic donor coverage, and component reserves.</p>
+          </div>
+          <a href="{{ url_for('admin.analytics') }}" class="btn btn-outline-primary btn-sm rounded-pill fw-bold align-self-start">
+            Open Analytics Dashboard &rarr;
+          </a>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card card-saas p-4 bg-white h-100 d-flex flex-column justify-content-between">
+          <div>
+            <h6 class="fw-bold text-navy mb-2"><i class="bi bi-journal-text text-dark me-2"></i>Immutable Audit Trail</h6>
+            <p class="text-secondary small mb-3">Audit logs recording administrative approvals, triage evaluations, and inventory changes.</p>
+          </div>
+          <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-outline-dark btn-sm rounded-pill fw-bold align-self-start">
+            View Audit Log &rarr;
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Audit Logs Table -->
+    <div class="card card-saas p-4 bg-white mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div>
+          <h5 class="fw-bold text-navy mb-0">Recent System Audit Events</h5>
+          <small class="text-muted">Security and administrative actions logged automatically with actor IDs.</small>
+        </div>
+        <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-link btn-sm text-crimson p-0 text-decoration-none fw-bold">
+          View All Logs &rarr;
+        </a>
+      </div>
+
+      {% if recent_audits %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th>Timestamp</th>
+              <th>Action</th>
+              <th>Entity</th>
+              <th>Actor</th>
+              <th>IP Address</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in recent_audits %}
+            <tr>
+              <td class="text-muted" style="font-size: 11px;">{{ log.created_at.strftime('%d %b %Y, %H:%M:%S') }}</td>
+              <td><span class="badge bg-light text-navy border">{{ log.action }}</span></td>
+              <td><span class="text-secondary">{{ log.entity_type }} #{{ log.entity_id or '-' }}</span></td>
+              <td><span class="text-dark fw-semibold">User #{{ log.actor_id or 'System' }}</span></td>
+              <td><span class="badge bg-light text-secondary border font-monospace" style="font-size: 10px;">{{ log.ip_address or '—' }}</span></td>
+              <td class="text-secondary">{{ log.details or '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted small mb-0 py-3 text-center">No audit logs recorded yet.</p>
+      {% endif %}
+    </div>
+
+  </main>
+</div>
+{% endblock %}

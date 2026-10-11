@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}How BloodLink AI Works - Complete Workflow{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container" style="max-width: 900px;">
+    
+    <div class="text-center mb-5">
+      <span class="text-crimson fw-bold small text-uppercase">Platform Lifecycle</span>
+      <h2 class="fw-bold text-dark mt-1">How BloodLink AI Works</h2>
+      <p class="text-secondary small">From verified hospital request to donor coordination, verification, and reward redemption.</p>
+    </div>
+
+    <div class="card card-saas p-4 p-md-5 bg-white">
+      <div class="d-flex flex-column gap-4">
+        
+        <!-- Step 1 -->
+        <div class="d-flex gap-3">
+          <div class="d-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-crimson rounded-circle flex-shrink-0 fw-bold" style="width: 44px; height: 44px;">
+            1
+          </div>
+          <div>
+            <h6 class="fw-bold text-dark mb-1">Hospital Emergency Request</h6>
+            <p class="text-secondary small mb-0">Authorized hospital clinical staff submit a blood request specifying blood group, component type, units required, location, and urgency.</p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="d-flex gap-3">
+          <div class="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle flex-shrink-0 fw-bold" style="width: 44px; height: 44px;">
+            2
+          </div>
+          <div>
+            <h6 class="fw-bold text-dark mb-1">Request Verification &amp; Priority Calculation</h6>
+            <p class="text-secondary small mb-0">Clinical coordinators verify the request authenticity. The AI Prioritization Engine calculates a transparent score ($0-100$) based on urgency, deadline, and regional shortages.</p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="d-flex gap-3">
+          <div class="d-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-dark rounded-circle flex-shrink-0 fw-bold" style="width: 44px; height: 44px;">
+            3
+          </div>
+          <div>
+            <h6 class="fw-bold text-dark mb-1">Blood Bank Inventory Search</h6>
+            <p class="text-secondary small mb-0">The platform automatically queries verified regional blood bank inventories to check if stock can be immediately transferred to the patient hospital.</p>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="d-flex gap-3">
+          <div class="d-flex align-items-center justify-content-center bg-info bg-opacity-10 text-dark rounded-circle flex-shrink-0 fw-bold" style="width: 44px; height: 44px;">
+            4
+          </div>
+          <div>
+            <h6 class="fw-bold text-dark mb-1">Preliminary Smart Donor Matching</h6>
+            <p class="text-secondary small mb-0">If additional units are needed, the matching engine identifies suitable voluntary donors using ABO rules, Haversine proximity, 56-day cooldown intervals, and consent settings.</p>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="d-flex gap-3">
+          <div class="d-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle flex-shrink-0 fw-bold" style="width: 44px; height: 44px;">
+            5
+          </div>
+          <div>
+            <h6 class="fw-bold text-dark mb-1">Donation Verification &amp; Rewards</h6>
+            <p class="text-secondary small mb-0">The donor donates in-person at the designated facility. Authorized staff verify the donation record, crediting Lifesaver Points to the donor's ledger for coupon redemption.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,417 @@
+{% extends 'base.html' %}
+
+{% block title %}Blood Bank Dashboard - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  
+  <!-- Sidebar Navigation -->
+  <aside class="dashboard-sidebar">
+    <div class="text-center pb-3 mb-3 border-bottom">
+      <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-crimson rounded-circle fs-3 mb-2" style="width: 64px; height: 64px;">
+        <i class="bi bi-box-seam"></i>
+      </div>
+      <h6 class="fw-bold text-navy mb-0">{{ org.organization_name }}</h6>
+      <small class="text-muted d-block" style="font-size: 11px;">
+        <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ org.city }}, {{ org.district or '' }} ({{ org.state }})
+      </small>
+      <span class="badge {% if org.is_verified %}bg-success{% else %}bg-warning text-dark{% endif %} rounded-pill px-2.5 py-1 mt-2 small" style="font-size: 10px;">
+        {% if org.is_verified %}Verified Facility{% else %}Pending Verification{% endif %}
+      </span>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-grow-1">
+      <a href="{{ url_for('blood_bank.dashboard') }}" class="sidebar-nav-link active">
+        <i class="bi bi-grid-fill"></i>Inventory Overview
+      </a>
+      <a href="{{ url_for('blood_bank.requests') }}" class="sidebar-nav-link">
+        <i class="bi bi-hospital-fill text-danger"></i>Hospital Requests
+      </a>
+      {% if org.is_verified %}
+      <a href="{{ url_for('blood_bank.inventory') }}" class="sidebar-nav-link">
+        <i class="bi bi-pencil-square"></i>Manage Stock Units
+      </a>
+      <a href="{{ url_for('blood_bank.donations') }}" class="sidebar-nav-link">
+        <i class="bi bi-clipboard-check-fill text-success"></i>Donation Verification Desk
+        {% if pending_donations > 0 %}
+        <span class="badge bg-danger ms-auto">{{ pending_donations }}</span>
+        {% endif %}
+      </a>
+      {% endif %}
+      <a href="{{ url_for('main.search') }}" class="sidebar-nav-link">
+        <i class="bi bi-search"></i>Search National Grid
+      </a>
+      <a href="{{ url_for('main.blood_banks') }}" class="sidebar-nav-link">
+        <i class="bi bi-buildings"></i>Directory View
+      </a>
+    </nav>
+
+    <!-- Accreditation & License -->
+    <div class="p-3 rounded-3 bg-light-page border mt-auto text-muted" style="font-size: 11px;">
+      <span class="d-block fw-bold text-navy mb-1"><i class="bi bi-shield-check text-success me-1"></i>Facility Accreditation:</span>
+      <span class="d-block text-truncate">{{ org.registration_reference or 'Active Clinical Laboratory' }}</span>
+      <span class="d-block mt-1">Contact: {{ org.contact_phone }}</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="dashboard-main">
+    
+    <!-- Welcome Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <h3 class="fw-bold text-navy mb-0">Blood Inventory &amp; Donation Desk</h3>
+        <p class="text-secondary small mb-0">Manage live reported unit reserves and digitally verify in-person voluntary donations.</p>
+      </div>
+
+      <div class="d-flex gap-2">
+        {% if org.is_verified %}
+        <a href="{{ url_for('blood_bank.inventory') }}" class="btn btn-crimson btn-sm px-3 shadow-xs">
+          <i class="bi bi-pencil-square me-1"></i>Update Stock
+        </a>
+        <a href="{{ url_for('blood_bank.donations') }}" class="btn btn-outline-success btn-sm px-3">
+          <i class="bi bi-clipboard-check me-1"></i>Verify Donations
+          {% if pending_donations > 0 %}
+          <span class="badge bg-danger ms-1">{{ pending_donations }}</span>
+          {% endif %}
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Warnings & Notices -->
+    {% if not org.is_verified %}
+    <div class="alert alert-warning card-saas p-4 mb-4 small border-warning border-opacity-50" role="alert">
+      <div class="d-flex align-items-start gap-3">
+        <i class="bi bi-hourglass-split text-warning fs-4"></i>
+        <div>
+          <h6 class="fw-bold text-dark mb-1">Facility Verification Pending</h6>
+          <p class="mb-0 text-secondary">
+            Your blood bank registration is currently under review. Once accredited by administrators, public search results will reflect your inventory.
+          </p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if outdated_count > 0 %}
+    <div class="alert alert-warning card-saas p-3 mb-4 small d-flex align-items-center gap-2 border-warning border-opacity-50" role="alert">
+      <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+      <span><strong>Attention:</strong> You have <strong>{{ outdated_count }}</strong> inventory record(s) not updated within 7 days. Please review and update available unit quantities.</span>
+    </div>
+    {% endif %}
+
+    <!-- Component Inventory Summary Cards -->
+    <div class="row g-4 mb-4">
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100">
+          <span class="small fw-bold text-secondary text-uppercase" style="font-size: 10px;">Whole Blood</span>
+          <div class="display-6 fw-bold text-crimson my-1">{{ component_summary.get('Whole Blood', 0) }}</div>
+          <small class="text-muted" style="font-size: 11px;">Units Available</small>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100">
+          <span class="small fw-bold text-secondary text-uppercase" style="font-size: 10px;">Red Blood Cells</span>
+          <div class="display-6 fw-bold text-navy my-1">{{ component_summary.get('Red Blood Cells', 0) }}</div>
+          <small class="text-muted" style="font-size: 11px;">Packed PRBC Units</small>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100">
+          <span class="small fw-bold text-secondary text-uppercase" style="font-size: 10px;">Platelets</span>
+          <div class="display-6 fw-bold text-warning my-1">{{ component_summary.get('Platelets', 0) }}</div>
+          <small class="text-muted" style="font-size: 11px;">RDP / SDP Units</small>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100">
+          <span class="small fw-bold text-secondary text-uppercase" style="font-size: 10px;">Plasma</span>
+          <div class="display-6 fw-bold text-primary my-1">{{ component_summary.get('Plasma', 0) }}</div>
+          <small class="text-muted" style="font-size: 11px;">Frozen FFP Units</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Action / Verification Desk Card -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-6">
+        <div class="card card-saas p-4 bg-white h-100">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="fw-bold text-navy mb-0">Donation Verification Desk</h5>
+            <span class="badge {% if pending_donations > 0 %}bg-danger{% else %}bg-success{% endif %}">
+              {{ pending_donations }} Pending
+            </span>
+          </div>
+          <p class="text-secondary small mb-3">
+            Authenticate in-person voluntary donations. Digital verification safely credits 100 Lifesaver points to the donor's wallet and resets their cooldown timer.
+          </p>
+          <a href="{{ url_for('blood_bank.donations') }}" class="btn btn-outline-crimson btn-sm fw-bold">
+            <i class="bi bi-clipboard-check me-1"></i>Open Verification Queue &rarr;
+          </a>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card card-saas p-4 bg-white h-100">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="fw-bold text-navy mb-0">Inventory Stock Controller</h5>
+            <span class="badge bg-light text-navy border">{{ total_units }} Total Units</span>
+          </div>
+          <p class="text-secondary small mb-3">
+            Keep laboratory reserves updated across all 8 blood groups and 4 components to maintain accurate public search visibility for nearby emergency centers.
+          </p>
+          <a href="{{ url_for('blood_bank.inventory') }}" class="btn btn-navy btn-sm fw-bold">
+            <i class="bi bi-pencil-square me-1"></i>Update Reported Units &rarr;
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Emergency Hospital Coordination Requests (Immediate Action Desk) -->
+    <div class="card card-saas p-4 bg-white mb-4 border-start border-4 border-danger">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div>
+          <h5 class="fw-bold text-navy mb-0">
+            <i class="bi bi-hospital-fill text-danger me-2"></i>Active Hospital Emergency Requirements
+          </h5>
+          <small class="text-secondary">Emergency requests matching your regional jurisdiction and blood inventory.</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-danger rounded-pill">{{ emergency_requests|length }} Active</span>
+          <a href="{{ url_for('blood_bank.requests') }}" class="btn btn-outline-danger btn-sm py-1 px-2.5" style="font-size: 11px;">
+            Full Grid View &rarr;
+          </a>
+        </div>
+      </div>
+
+      {% if emergency_requests %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th>Request</th>
+              <th>Hospital &amp; Location</th>
+              <th>Requirement</th>
+              <th>Local Stock</th>
+              <th>Status / Coordination</th>
+              <th class="text-end">Immediate Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in emergency_requests %}
+            {% set req = item.request %}
+            {% set resp = item.my_response %}
+            <tr>
+              <td>
+                <span class="fw-bold text-dark">{{ req.request_reference }}</span>
+                <span class="badge bg-danger bg-opacity-10 text-crimson d-block mt-1" style="font-size: 10px;">{{ req.urgency_level }} Urgency</span>
+              </td>
+              <td>
+                <strong class="text-dark">{{ req.requesting_organization.organization_name }}</strong>
+                <small class="text-muted d-block">{{ req.location }}</small>
+                {% if item.distance_km is not none %}
+                <span class="badge bg-light text-secondary border mt-1" style="font-size: 10px;">{{ item.distance_km }} km away</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge bg-danger bg-opacity-10 text-crimson fw-bold px-2 py-1 fs-6">{{ req.blood_group }}</span>
+                <span class="fw-semibold text-dark d-block mt-1">{{ req.units_required }} Unit(s) ({{ req.component_type }})</span>
+              </td>
+              <td>
+                <div>
+                  <strong>{{ item.my_unreserved_units }}</strong> <span class="text-muted">Unreserved</span>
+                </div>
+                <small class="text-muted">({{ item.my_available_units }} total, {{ item.my_reserved_units }} held)</small>
+                {% if item.has_sufficient_stock %}
+                <span class="badge bg-success bg-opacity-10 text-success d-block mt-1" style="font-size: 10px;">Sufficient Stock</span>
+                {% elif item.my_unreserved_units > 0 %}
+                <span class="badge bg-warning bg-opacity-10 text-warning d-block mt-1" style="font-size: 10px;">Partial Stock</span>
+                {% else %}
+                <span class="badge bg-secondary bg-opacity-10 text-secondary d-block mt-1" style="font-size: 10px;">No Stock</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if resp %}
+                  {% if resp.response_status == 'ACCEPTED' %}
+                  <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Reserved ({{ resp.units_reserved }} units)</span>
+                  {% elif resp.response_status == 'REVIEWING' %}
+                  <span class="badge bg-info text-dark"><i class="bi bi-hourglass-split me-1"></i>Reviewing Stock</span>
+                  {% elif resp.response_status == 'DECLINED' %}
+                  <span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i>Declined</span>
+                  {% else %}
+                  <span class="badge bg-primary">{{ resp.response_status }}</span>
+                  {% endif %}
+                {% else %}
+                  <span class="badge bg-light text-secondary border">No Response Yet</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+                  {% if org.is_verified %}
+                    <!-- Action 1: We Have Blood Available -->
+                    <button type="button" class="btn btn-success btn-sm py-1 px-2 fw-semibold" style="font-size: 11px;"
+                            data-bs-toggle="modal" data-bs-target="#reserveModalDashboard{{ req.id }}"
+                            {% if item.my_unreserved_units <= 0 %}disabled title="No unreserved stock available"{% endif %}>
+                      <i class="bi bi-check2-circle me-1"></i>We Have Blood Available
+                    </button>
+
+                    <!-- Action 2: Check Availability -->
+                    <form action="{{ url_for('blood_bank.respond_to_request', request_id=req.id) }}" method="POST" class="d-inline">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <input type="hidden" name="decision" value="CHECK_AVAILABILITY">
+                      <button type="submit" class="btn btn-outline-info btn-sm py-1 px-2 text-dark" style="font-size: 11px;" title="Check physical stock without reserving">
+                        <i class="bi bi-search me-1"></i>Check Availability
+                      </button>
+                    </form>
+
+                    <!-- Action 3: Unable to Fulfil -->
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-1 px-2" style="font-size: 11px;"
+                            data-bs-toggle="modal" data-bs-target="#declineModalDashboard{{ req.id }}">
+                      <i class="bi bi-x me-1"></i>Unable to Fulfil
+                    </button>
+
+                    <!-- Modal: Reserve Stock -->
+                    <div class="modal fade" id="reserveModalDashboard{{ req.id }}" tabindex="-1" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered modal-sm text-start">
+                        <div class="modal-content">
+                          <form action="{{ url_for('blood_bank.respond_to_request', request_id=req.id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="decision" value="ACCEPT">
+                            <div class="modal-header py-2">
+                              <h6 class="modal-title fw-bold text-navy">Reserve Stock Units</h6>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body py-3">
+                              <p class="small text-secondary mb-2">
+                                Request: <strong>{{ req.request_reference }}</strong> ({{ req.units_required }} units of {{ req.blood_group }} {{ req.component_type }})
+                              </p>
+                              <label class="form-label small fw-bold text-dark">Units to Reserve (Max: {{ item.my_unreserved_units }}):</label>
+                              <input type="number" name="units_to_reserve" min="1" max="{{ [item.my_unreserved_units, req.units_required]|min }}" value="{{ [item.my_unreserved_units, req.units_required]|min }}" class="form-control form-control-sm" required>
+                              <label class="form-label small fw-bold text-dark mt-2">Coordination Notes (optional):</label>
+                              <textarea name="notes" class="form-control form-control-sm" rows="2" placeholder="e.g. Cross-match units set aside in Cold Room 2"></textarea>
+                            </div>
+                            <div class="modal-footer py-2">
+                              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                              <button type="submit" class="btn btn-success btn-sm fw-bold">Confirm Reservation</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Modal: Unable to Fulfil -->
+                    <div class="modal fade" id="declineModalDashboard{{ req.id }}" tabindex="-1" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered modal-sm text-start">
+                        <div class="modal-content">
+                          <form action="{{ url_for('blood_bank.respond_to_request', request_id=req.id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="decision" value="DECLINE">
+                            <div class="modal-header py-2">
+                              <h6 class="modal-title fw-bold text-navy">Report Unable to Fulfil</h6>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body py-3">
+                              <label class="form-label small fw-bold text-dark">Reason for Declining:</label>
+                              <textarea name="notes" class="form-control form-control-sm" rows="2" required placeholder="e.g. Insufficient stock / reserved for trauma OR"></textarea>
+                            </div>
+                            <div class="modal-footer py-2">
+                              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                              <button type="submit" class="btn btn-danger btn-sm fw-bold">Submit Decline</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+
+                  {% else %}
+                    <span class="badge bg-secondary" style="font-size: 11px;">Verification Pending</span>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-4 text-muted small">
+        <i class="bi bi-shield-check fs-2 text-success d-block mb-1"></i>
+        No active hospital emergency requests currently require coordination in your area.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Active Reported Inventory Table -->
+    <div class="card card-saas p-4 bg-white mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div>
+          <h5 class="fw-bold text-navy mb-0">Current Reported Stock by Group &amp; Component</h5>
+          <small class="text-muted">Live laboratory quantities monitored in the central grid.</small>
+        </div>
+        <span class="badge bg-light text-navy border">{{ inventories|length }} Records</span>
+      </div>
+
+      {% if inventories %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th>Blood Group</th>
+              <th>Component Type</th>
+              <th>Available Units</th>
+              <th>Status Level</th>
+              <th>Last Updated</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inv in inventories %}
+            <tr>
+              <td>
+                <span class="badge bg-danger bg-opacity-10 text-crimson fw-bold px-2.5 py-1 fs-6">
+                  {{ inv.blood_group }}
+                </span>
+              </td>
+              <td class="fw-semibold text-dark">{{ inv.component_type }}</td>
+              <td class="fw-bold fs-6">{{ inv.available_units }} Unit(s)</td>
+              <td>
+                {% if inv.available_units <= 2 %}
+                <span class="stock-pill stock-pill-critical">Critical Low</span>
+                {% elif inv.available_units <= 5 %}
+                <span class="stock-pill stock-pill-limited">Limited Reserve</span>
+                {% else %}
+                <span class="stock-pill stock-pill-available">Adequate</span>
+                {% endif %}
+              </td>
+              <td class="text-muted" style="font-size: 11px;">
+                {{ inv.last_updated_at.strftime('%d %b %Y, %H:%M') }}
+                {% if inv.is_outdated %}
+                <span class="badge bg-secondary ms-1">Outdated</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <a href="{{ url_for('blood_bank.inventory') }}" class="btn btn-light btn-sm border" style="font-size: 11px;">
+                  <i class="bi bi-pencil me-1"></i>Edit
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-4 text-muted small">
+        <i class="bi bi-inbox fs-2 text-secondary d-block mb-1"></i>
+        No inventory records configured yet. Use the "Update Stock" button above to record available units.
+      </div>
+      {% endif %}
+    </div>
+
+  </main>
+</div>
+{% endblock %}

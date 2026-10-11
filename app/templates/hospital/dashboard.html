@@ -1,0 +1,412 @@
+{% extends 'base.html' %}
+
+{% block title %}Hospital Dashboard - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  
+  <!-- Sidebar Navigation -->
+  <aside class="dashboard-sidebar">
+    <div class="text-center pb-3 mb-3 border-bottom">
+      <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle fs-3 mb-2" style="width: 64px; height: 64px;">
+        <i class="bi bi-hospital"></i>
+      </div>
+      <h6 class="fw-bold text-navy mb-0">{{ org.organization_name }}</h6>
+      <small class="text-muted d-block" style="font-size: 11px;">
+        <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ org.city }}, {{ org.district or '' }} ({{ org.state }})
+      </small>
+      <span class="badge {% if org.is_verified %}bg-success{% else %}bg-warning text-dark{% endif %} rounded-pill px-2.5 py-1 mt-2 small" style="font-size: 10px;">
+        {% if org.is_verified %}Verified Hospital{% else %}Pending Approval{% endif %}
+      </span>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-grow-1">
+      <a href="{{ url_for('hospital.dashboard') }}" class="sidebar-nav-link active">
+        <i class="bi bi-grid-fill"></i>Clinical Requests Overview
+      </a>
+      <a href="{{ url_for('hospital.inventory_search') }}" class="sidebar-nav-link">
+        <i class="bi bi-droplet-half text-danger"></i>Find Blood &amp; Inventory
+      </a>
+      <a href="{{ url_for('hospital.find_donors') }}" class="sidebar-nav-link">
+        <i class="bi bi-person-search text-danger"></i>Find Matching Donors
+      </a>
+      {% if org.is_verified %}
+      <a href="{{ url_for('hospital.create_request') }}" class="sidebar-nav-link">
+        <i class="bi bi-plus-circle-fill text-crimson"></i>Post Emergency Request
+      </a>
+      {% endif %}
+      <a href="#interested-donors" class="sidebar-nav-link">
+        <i class="bi bi-people-fill text-primary"></i>Interested Donors
+      </a>
+      <a href="{{ url_for('communication.list_conversations') }}" class="sidebar-nav-link">
+        <i class="bi bi-chat-dots-fill"></i>Message Center
+      </a>
+      <a href="{{ url_for('main.blood_banks') }}" class="sidebar-nav-link">
+        <i class="bi bi-building"></i>Blood Bank Directory
+      </a>
+    </nav>
+
+    <!-- Accreditation Info Box -->
+    <div class="p-3 rounded-3 bg-light-page border mt-auto text-muted" style="font-size: 11px;">
+      <span class="d-block fw-bold text-navy mb-1"><i class="bi bi-shield-check text-success me-1"></i>Accreditation Reference:</span>
+      <span class="d-block text-truncate">{{ org.registration_reference or 'Pending State Medical License' }}</span>
+      <span class="d-block mt-1">Phone: {{ org.contact_phone }}</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="dashboard-main">
+    
+    <!-- Section: Find Blood & Manage Requests -->
+    <div class="card card-saas p-4 bg-white mb-4 border-start border-4 border-danger shadow-xs">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div>
+          <h3 class="fw-bold text-navy mb-1">
+            <i class="bi bi-search-heart text-crimson me-2"></i>Find Blood &amp; Manage Requests
+          </h3>
+          <p class="text-secondary small mb-0">Search verified blood bank stock across regions, submit clinical requests, track interested voluntary donors, and coordinate transfusions.</p>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+          <a href="{{ url_for('hospital.inventory_search') }}" class="btn btn-outline-crimson btn-sm px-3 fw-semibold">
+            <i class="bi bi-droplet-half me-1"></i>Search Regional Stock
+          </a>
+          {% if org.is_verified %}
+          <a href="{{ url_for('hospital.create_request') }}" class="btn btn-crimson btn-sm px-3 shadow-xs fw-semibold">
+            <i class="bi bi-plus-circle me-1"></i>Create Blood Request
+          </a>
+          {% endif %}
+          <a href="{{ url_for('communication.list_conversations') }}" class="btn btn-outline-primary btn-sm px-3 fw-semibold">
+            <i class="bi bi-chat-dots-fill me-1"></i>Message Center
+          </a>
+        </div>
+      </div>
+    </div>
+
+    {% if not org.is_verified %}
+    <div class="alert alert-warning card-saas p-4 mb-4 small border-warning border-opacity-50" role="alert">
+      <div class="d-flex align-items-start gap-3">
+        <i class="bi bi-hourglass-split text-warning fs-4"></i>
+        <div>
+          <h6 class="fw-bold text-dark mb-1">Organization Accreditation Under Review</h6>
+          <p class="mb-0 text-secondary">
+            Your facility registration is currently under administrator audit. To maintain clinical protocol safety and prevent emergency spoofing, trusted request creation is enabled immediately following administrative approval.
+          </p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Metric Summary Cards -->
+    <div class="row g-4 mb-4">
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100">
+          <span class="small fw-bold text-secondary text-uppercase" style="font-size: 10px;">Active Requests</span>
+          <div class="display-6 fw-bold text-crimson my-1">{{ active_requests|length }}</div>
+          <small class="text-muted" style="font-size: 11px;">Under review or matching</small>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100">
+          <span class="small fw-bold text-secondary text-uppercase" style="font-size: 10px;">Fulfilled Requests</span>
+          <div class="display-6 fw-bold text-success my-1">
+            {{ past_requests|selectattr('request_status', 'equalto', 'FULFILLED')|list|length }}
+          </div>
+          <small class="text-muted" style="font-size: 11px;">Transfusions completed</small>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100">
+          <span class="small fw-bold text-secondary text-uppercase" style="font-size: 10px;">Pending Verification</span>
+          <div class="display-6 fw-bold text-warning my-1">
+            {{ active_requests|selectattr('verification_status', 'equalto', 'PENDING')|list|length }}
+          </div>
+          <small class="text-muted" style="font-size: 11px;">Awaiting admin sign-off</small>
+        </div>
+      </div>
+
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100">
+          <span class="small fw-bold text-secondary text-uppercase" style="font-size: 10px;">Total Lifetime Requests</span>
+          <div class="display-6 fw-bold text-navy my-1">{{ (active_requests|length) + (past_requests|length) }}</div>
+          <small class="text-muted" style="font-size: 11px;">Historical hospital record</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Requests Grid & Table -->
+    <div class="card card-saas p-4 bg-white mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div>
+          <h5 class="fw-bold text-navy mb-0">Active Emergency Requests</h5>
+          <small class="text-muted">Requests currently verified or undergoing smart donor matching dispatch.</small>
+        </div>
+        <span class="badge bg-light text-navy border">{{ active_requests|length }} Active</span>
+      </div>
+
+      {% if active_requests %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th>Reference</th>
+              <th>Group &amp; Component</th>
+              <th>Units</th>
+              <th>Urgency</th>
+              <th>AI Priority Score</th>
+              <th>Verification</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in active_requests %}
+            <tr>
+              <td class="fw-bold text-navy">{{ req.request_reference }}</td>
+              <td>
+                <span class="badge bg-danger bg-opacity-10 text-crimson fw-bold px-2 py-1">
+                  {{ req.blood_group }}
+                </span>
+                <span class="text-muted ms-1">({{ req.component_type }})</span>
+              </td>
+              <td class="fw-bold text-dark">{{ req.units_required }} Unit(s)</td>
+              <td>
+                <span class="badge {% if req.urgency_level == 'CRITICAL' %}bg-danger priority-critical-pulse{% elif req.urgency_level == 'HIGH' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                  {{ req.urgency_level }}
+                </span>
+              </td>
+              <td>
+                <strong class="text-navy">{{ req.priority_score }}</strong>/100
+              </td>
+              <td>
+                <span class="badge {% if req.verification_status == 'VERIFIED' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                  {{ req.verification_status }}
+                </span>
+              </td>
+              <td>
+                <span class="badge bg-light text-dark border">{{ req.request_status }}</span>
+              </td>
+              <td class="text-end">
+                <a href="{{ url_for('hospital.request_details', request_id=req.id) }}" class="btn btn-outline-crimson btn-sm rounded-pill px-3" style="font-size: 11px;">
+                  Inspect &amp; Match &rarr;
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-4 text-muted small">
+        <i class="bi bi-inbox fs-2 text-secondary d-block mb-1"></i>
+        No active blood requests currently. Use the button above to post an emergency request when clinical needs arise.
+      </div>
+      {% endif %}
+    <!-- Section: Responses from Interested Donors (Feature 1 & 2) -->
+    <div id="interested-donors" class="card card-saas p-4 bg-white mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div>
+          <h5 class="fw-bold text-navy mb-0">
+            <i class="bi bi-people-fill text-crimson me-2"></i>Responses from Interested Donors
+          </h5>
+          <small class="text-secondary">Voluntary donors who signaled readiness to donate for your hospital's blood requests.</small>
+        </div>
+        <span class="badge bg-danger bg-opacity-10 text-crimson border border-danger border-opacity-25">{{ donor_responses|length }} Responses</span>
+      </div>
+
+      {% if donor_responses %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th>Request Ref</th>
+              <th>Donor Name</th>
+              <th>Blood Group</th>
+              <th>Date Responded</th>
+              <th>Current Status</th>
+              <th>Contact Phone</th>
+              <th class="text-end">Manage Response</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for resp in donor_responses %}
+            <tr>
+              <td class="fw-bold text-navy">
+                <a href="{{ url_for('hospital.request_details', request_id=resp.blood_request_id) }}" class="text-navy text-decoration-none">
+                  {{ resp.blood_request.request_reference }}
+                </a>
+              </td>
+              <td class="fw-semibold text-dark">{{ resp.donor.name }}</td>
+              <td>
+                <span class="badge bg-danger bg-opacity-10 text-crimson fw-bold">{{ resp.donor.donor_profile.declared_blood_group }}</span>
+              </td>
+              <td>{{ resp.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+              <td>
+                <span class="badge {% if resp.response_status in ('INTERESTED', 'CONFIRMED') %}bg-success{% elif resp.response_status == 'WITHDRAWN' %}bg-secondary{% elif resp.response_status == 'COMPLETED' %}bg-primary{% else %}bg-warning text-dark{% endif %}">
+                  {{ resp.response_status }}
+                </span>
+              </td>
+              <td>
+                {% if resp.donor.donor_profile.phone %}
+                <a href="tel:{{ resp.donor.donor_profile.phone }}" class="text-decoration-none text-secondary">
+                  <i class="bi bi-telephone me-1 text-primary"></i>{{ resp.donor.donor_profile.phone }}
+                </a>
+                {% else %}
+                <span class="text-muted fst-italic">In-app communication</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-1.5 align-items-center">
+                  <a href="{{ url_for('communication.start_or_get_conversation', request_id=resp.blood_request_id, donor_id=resp.donor_id) }}" class="btn btn-outline-primary btn-sm py-0.5 px-2" style="font-size: 11px;" title="Message Donor">
+                    <i class="bi bi-chat-dots-fill"></i>
+                  </a>
+                  <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2" style="font-size: 11px;" data-bs-toggle="modal" data-bs-target="#updateRespModal{{ resp.id }}">
+                    Update Status
+                  </button>
+                </div>
+
+                <!-- Modal for updating response status -->
+                <div class="modal fade text-start" id="updateRespModal{{ resp.id }}" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content border-0 shadow">
+                      <div class="modal-header py-2.5 px-3 bg-light">
+                        <h6 class="modal-title fw-bold text-navy" style="font-size: 13px;">Update Donor Status</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <form action="{{ url_for('hospital.update_donor_response_status', response_id=resp.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="modal-body p-3">
+                          <label class="form-label small fw-semibold text-secondary">Coordination Status</label>
+                          <select name="response_status" class="form-select form-select-sm">
+                            <option value="INTERESTED" {% if resp.response_status == 'INTERESTED' %}selected{% endif %}>INTERESTED</option>
+                            <option value="CONTACT_REQUESTED" {% if resp.response_status == 'CONTACT_REQUESTED' %}selected{% endif %}>CONTACT_REQUESTED</option>
+                            <option value="CONTACTED" {% if resp.response_status == 'CONTACTED' %}selected{% endif %}>CONTACTED</option>
+                            <option value="CONFIRMED" {% if resp.response_status == 'CONFIRMED' %}selected{% endif %}>CONFIRMED</option>
+                            <option value="COMPLETED" {% if resp.response_status == 'COMPLETED' %}selected{% endif %}>COMPLETED</option>
+                            <option value="DECLINED" {% if resp.response_status == 'DECLINED' %}selected{% endif %}>DECLINED</option>
+                          </select>
+                        </div>
+                        <div class="modal-footer py-2 px-3 bg-light">
+                          <button type="button" class="btn btn-outline-secondary btn-sm py-1" data-bs-dismiss="modal">Cancel</button>
+                          <button type="submit" class="btn btn-crimson btn-sm py-1 fw-bold">Save Status</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-4 text-muted small">
+        <i class="bi bi-inbox fs-2 text-secondary d-block mb-1"></i>
+        No voluntary donor responses received yet for your facility's requests. Dispatched requests will display interested donors here.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Section: Direct Donor Invitations Sent (Feature 2.E) -->
+    <div id="sent-invitations" class="card card-saas p-4 bg-white mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div>
+          <h5 class="fw-bold text-navy mb-0">
+            <i class="bi bi-send-check text-primary me-2"></i>Dispatched Donor Invitations
+          </h5>
+          <small class="text-secondary">Direct clinical invitations sent to consented voluntary donors matching specific requests.</small>
+        </div>
+        <span class="badge bg-light text-navy border">{{ sent_invitations|length }} Total</span>
+      </div>
+
+      {% if sent_invitations %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th>Request Ref</th>
+              <th>Donor Name</th>
+              <th>Group</th>
+              <th>Dispatched At</th>
+              <th>Status</th>
+              <th>Responded At</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inv in sent_invitations %}
+            <tr>
+              <td class="fw-bold text-navy">{{ inv.blood_request.request_reference }}</td>
+              <td class="fw-semibold text-dark">{{ inv.donor.name }}</td>
+              <td><span class="badge bg-danger bg-opacity-10 text-crimson fw-bold">{{ inv.donor.donor_profile.declared_blood_group }}</span></td>
+              <td>{{ inv.created_at.strftime('%d %b %Y, %H:%M') }}</td>
+              <td>
+                <span class="badge {% if inv.invitation_status == 'ACCEPTED' %}bg-success{% elif inv.invitation_status == 'DECLINED' %}bg-secondary{% elif inv.invitation_status == 'SENT' %}bg-primary{% else %}bg-warning text-dark{% endif %}">
+                  {{ inv.invitation_status }}
+                </span>
+              </td>
+              <td>{{ inv.responded_at.strftime('%d %b %Y, %H:%M') if inv.responded_at else '—' }}</td>
+              <td class="text-end">
+                <a href="{{ url_for('communication.start_or_get_conversation', request_id=inv.blood_request_id, donor_id=inv.donor_id) }}" class="btn btn-outline-primary btn-sm py-0.5 px-2" style="font-size: 11px;">
+                  <i class="bi bi-chat-dots-fill me-1"></i>Message
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-4 text-muted small">
+        <i class="bi bi-inbox fs-2 text-secondary d-block mb-1"></i>
+        No direct donor invitations dispatched yet. Open any active request details to find and invite matching donors.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Past / Historical Requests -->
+    {% if past_requests %}
+    <div class="card card-saas p-4 bg-white mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <h6 class="fw-bold text-navy mb-0">Recent Fulfilled / Closed Requests</h6>
+        <span class="badge bg-light text-muted border">{{ past_requests|length }} Records</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th>Reference</th>
+              <th>Group</th>
+              <th>Units</th>
+              <th>Outcome</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in past_requests %}
+            <tr>
+              <td class="fw-semibold text-navy">{{ r.request_reference }}</td>
+              <td>{{ r.blood_group }} ({{ r.component_type }})</td>
+              <td>{{ r.units_required }} Unit(s)</td>
+              <td>
+                <span class="badge {% if r.request_status == 'FULFILLED' %}bg-success{% else %}bg-secondary{% endif %}">
+                  {{ r.request_status }}
+                </span>
+              </td>
+              <td class="text-muted" style="font-size: 11px;">{{ r.created_at.strftime('%d %b %Y') }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+  </main>
+</div>
+{% endblock %}

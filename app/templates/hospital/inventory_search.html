@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Regional Blood Inventory - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-danger bg-opacity-10 text-crimson fw-bold small mb-2">
+          <i class="bi bi-droplet-half"></i>
+          <span>Hospital Transfusion Procurement Grid</span>
+        </div>
+        <h3 class="fw-bold text-navy mb-0">Regional Blood Bank Inventory Search</h3>
+        <p class="text-secondary small mb-0">Query real-time available stock exclusively from verified, participating blood banks across Indian states.</p>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('hospital.dashboard') }}" class="btn btn-outline-secondary btn-sm px-3 rounded-pill">
+          <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+        </a>
+        {% if org.is_verified %}
+        <a href="{{ url_for('hospital.create_request') }}" class="btn btn-crimson btn-sm px-3 rounded-pill shadow-xs">
+          <i class="bi bi-plus-circle me-1"></i>Create Blood Request
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Search Filters Card -->
+    <div class="card card-saas p-4 bg-white mb-4 shadow-sm border">
+      <form method="GET" action="{{ url_for('hospital.inventory_search') }}" class="row g-3 align-items-end">
+        <div class="col-md-3 col-6">
+          <label class="form-label small fw-bold text-secondary">Blood Group</label>
+          <select name="blood_group" class="form-select form-select-sm fw-bold text-danger border">
+            <option value="">All Blood Groups</option>
+            {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+            <option value="{{ bg }}" {% if selected_bg == bg %}selected{% endif %}>{{ bg }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3 col-6">
+          <label class="form-label small fw-bold text-secondary">Component Type</label>
+          <select name="component_type" class="form-select form-select-sm border">
+            <option value="">All Components</option>
+            {% for comp in ['Whole Blood', 'Red Blood Cells', 'Platelets', 'Plasma'] %}
+            <option value="{{ comp }}" {% if selected_comp == comp %}selected{% endif %}>{{ comp }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3 col-6">
+          <label class="form-label small fw-bold text-secondary">State / UT</label>
+          <select name="state" id="search_state" class="form-select form-select-sm border">
+            <option value="">All States &amp; UTs</option>
+            {% for st in all_states %}
+            <option value="{{ st }}" {% if selected_state == st %}selected{% endif %}>{{ st }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3 col-6 d-flex gap-2">
+          <button type="submit" class="btn btn-crimson btn-sm flex-grow-1 fw-bold py-1.5 shadow-xs">
+            <i class="bi bi-search me-1"></i>Search Stock
+          </button>
+          <a href="{{ url_for('hospital.inventory_search') }}" class="btn btn-outline-secondary btn-sm py-1.5" title="Reset Filters">
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Notice -->
+    <div class="alert alert-info py-2.5 px-3 small d-flex align-items-center gap-2 mb-4 rounded-3 border-info border-opacity-25" role="alert">
+      <i class="bi bi-info-circle-fill text-primary fs-5 flex-shrink-0"></i>
+      <div>
+        <strong>Verification &amp; Availability Disclaimer:</strong> Stock listings reflect verified blood bank inventory reports. Blood quantities are not guaranteed until cross-matched and confirmed by the dispensing blood bank. Expired and reserved units are automatically excluded.
+      </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="card card-saas p-4 bg-white shadow-sm border">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <h5 class="fw-bold text-navy mb-0">
+          <i class="bi bi-shield-check text-success me-2"></i>Verified Inventory Stock
+        </h5>
+        <span class="badge bg-light text-navy border">{{ results|length }} Batches Found</span>
+      </div>
+
+      {% if results %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th>Blood Bank Facility</th>
+              <th>Location</th>
+              <th>Group &amp; Component</th>
+              <th>Available Units</th>
+              <th>Expiry Status</th>
+              <th>Last Reported</th>
+              <th class="text-end">Contact Facility</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inv in results %}
+            <tr>
+              <td>
+                <div class="fw-bold text-navy">{{ inv.blood_bank.organization_name }}</div>
+                <small class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 9px;">
+                  <i class="bi bi-patch-check-fill me-1"></i>Accredited Blood Bank
+                </small>
+              </td>
+              <td class="text-secondary">
+                {{ inv.blood_bank.city }}, {{ inv.blood_bank.district or '' }}<br>
+                <small class="text-muted">{{ inv.blood_bank.state }}</small>
+              </td>
+              <td>
+                <span class="badge bg-danger bg-opacity-10 text-crimson fw-bold px-2 py-1 fs-6">
+                  {{ inv.blood_group }}
+                </span>
+                <div class="text-muted mt-0.5" style="font-size: 11px;">{{ inv.component_type }}</div>
+              </td>
+              <td>
+                <div class="fs-6 fw-bold text-success">{{ inv.available_units }} Unit(s)</div>
+              </td>
+              <td>
+                {% if inv.expiry_date %}
+                <span class="badge bg-light text-dark border">Expires: {{ inv.expiry_date.strftime('%d %b %Y') }}</span>
+                {% else %}
+                <span class="text-muted">Fresh Clinical Stock</span>
+                {% endif %}
+              </td>
+              <td class="text-muted" style="font-size: 11px;">
+                {{ inv.last_updated.strftime('%d %b %Y, %H:%M') if inv.last_updated else 'Recent' }}
+              </td>
+              <td class="text-end">
+                <a href="tel:{{ inv.blood_bank.contact_phone }}" class="btn btn-outline-crimson btn-sm py-1 px-2.5 fw-semibold" style="font-size: 11px;">
+                  <i class="bi bi-telephone-fill me-1"></i>{{ inv.blood_bank.contact_phone }}
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-muted small">
+        <i class="bi bi-droplet-slash fs-1 text-secondary d-block mb-2"></i>
+        No available inventory batches matching your search criteria. Try broadening your geographic or component filters.
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

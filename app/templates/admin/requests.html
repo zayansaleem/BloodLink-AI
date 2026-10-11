@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Emergency Request Approvals &amp; Investigation - BloodLink AI Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container">
+    
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+      <div>
+        <h4 class="fw-bold text-dark mb-0">Emergency Requests &amp; Clinical Audit Desk</h4>
+        <small class="text-secondary">Monitor active hospital–blood bank–donor coordination workflows and investigate flagged requests.</small>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm rounded-pill">
+          <i class="bi bi-arrow-left me-1"></i>Back to Admin Console
+        </a>
+      </div>
+    </div>
+
+    <!-- Diagnostic Oversight Metric Cards -->
+    {% if metrics %}
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100">
+          <small class="text-secondary text-uppercase fw-bold" style="font-size: 10px;">Active Coordination</small>
+          <div class="display-6 fw-bold text-primary my-1">{{ metrics.active }}</div>
+          <small class="text-muted">Out of {{ metrics.total }} total requests</small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100">
+          <small class="text-secondary text-uppercase fw-bold" style="font-size: 10px;">Flagged for Review</small>
+          <div class="display-6 fw-bold text-danger my-1">{{ metrics.flagged }}</div>
+          <small class="text-muted">Requires investigation</small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100">
+          <small class="text-secondary text-uppercase fw-bold" style="font-size: 10px;">Verified Donations</small>
+          <div class="display-6 fw-bold text-success my-1">{{ metrics.verified_donations }}</div>
+          <small class="text-muted">Certified intakes</small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="card card-saas p-3 bg-white h-100">
+          <small class="text-secondary text-uppercase fw-bold" style="font-size: 10px;">Donors in Recovery</small>
+          <div class="display-6 fw-bold text-warning my-1">{{ metrics.in_recovery }}</div>
+          <small class="text-muted">Restricted by cooldown policy</small>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Filter Pills -->
+    <div class="mb-4 d-flex flex-wrap gap-2">
+      <a href="{{ url_for('admin.requests', status='ALL') }}" class="btn btn-sm rounded-pill {% if current_filter == 'ALL' %}btn-dark{% else %}btn-light border{% endif %}">
+        All Records
+      </a>
+      <a href="{{ url_for('admin.requests', status='ACTIVE') }}" class="btn btn-sm rounded-pill {% if current_filter == 'ACTIVE' %}btn-primary{% else %}btn-light border{% endif %}">
+        Active Coordination
+      </a>
+      <a href="{{ url_for('admin.requests', status='FLAGGED') }}" class="btn btn-sm rounded-pill {% if current_filter == 'FLAGGED' %}btn-danger{% else %}btn-light border{% endif %}">
+        Flagged for Investigation
+      </a>
+      <a href="{{ url_for('admin.requests', status='PENDING') }}" class="btn btn-sm rounded-pill {% if current_filter == 'PENDING' %}btn-warning text-dark{% else %}btn-light border{% endif %}">
+        Pending Verification
+      </a>
+      <a href="{{ url_for('admin.requests', status='FULFILLED') }}" class="btn btn-sm rounded-pill {% if current_filter == 'FULFILLED' %}btn-success{% else %}btn-light border{% endif %}">
+        Fulfilled
+      </a>
+    </div>
+
+    <!-- Requests Table -->
+    <div class="card card-saas p-0 overflow-hidden bg-white">
+      {% if requests %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th class="ps-4">Reference</th>
+              <th>Hospital Facility</th>
+              <th>Group &amp; Component</th>
+              <th>Units &amp; Urgency</th>
+              <th>Coordination Status</th>
+              <th>AI Priority</th>
+              <th>Created At</th>
+              <th class="pe-4 text-end">Administrative Oversight</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in requests %}
+            <tr>
+              <td class="ps-4 fw-bold font-monospace text-navy">{{ req.request_reference }}</td>
+              <td>
+                <strong class="text-dark">{{ req.requesting_organization.organization_name }}</strong>
+                <small class="text-muted d-block">{{ req.location }} ({{ req.city or '' }}, {{ req.state or '' }})</small>
+              </td>
+              <td>
+                <span class="badge bg-danger bg-opacity-10 text-crimson border border-danger border-opacity-25 px-2 py-1 fw-bold fs-6">
+                  {{ req.blood_group }}
+                </span>
+                <span class="text-dark fw-semibold ms-1">{{ req.component_type }}</span>
+              </td>
+              <td>
+                <span class="fw-bold text-dark">{{ req.units_required }} Unit(s)</span>
+                <span class="badge {% if req.urgency_level == 'CRITICAL' %}bg-danger priority-critical-pulse{% elif req.urgency_level == 'HIGH' %}bg-warning text-dark{% else %}bg-secondary{% endif %} ms-1">
+                  {{ req.urgency_level }}
+                </span>
+              </td>
+              <td>
+                {% set label, style = req.status_badge %}
+                <span class="badge bg-{{ style }}">{{ label }}</span>
+              </td>
+              <td>
+                <strong class="text-dark">{{ req.priority_score }}</strong>/100
+              </td>
+              <td class="text-muted" style="font-size: 11px;">{{ req.created_at.strftime('%d %b, %H:%M') }}</td>
+              <td class="pe-4 text-end">
+                <div class="d-inline-flex gap-1.5 align-items-center">
+                  {% if req.request_status == 'FLAGGED_FOR_REVIEW' %}
+                    <!-- Clear investigation / Unflag -->
+                    <form action="{{ url_for('admin.unflag_request', req_id=req.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Clear investigation and restore request {{ req.request_reference }} to active matching?');">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-success btn-sm rounded-pill px-2.5 fw-bold" style="font-size: 11px;">
+                        <i class="bi bi-shield-check me-1"></i>Clear &amp; Restore
+                      </button>
+                    </form>
+                    <form action="{{ url_for('admin.reject_request', req_id=req.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently reject request {{ req.request_reference }}?');">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2" style="font-size: 11px;">
+                        Reject
+                      </button>
+                    </form>
+
+                  {% elif req.verification_status == 'PENDING' %}
+                    <!-- Manual legacy verify & match -->
+                    <form action="{{ url_for('admin.verify_request', req_id=req.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Verify request {{ req.request_reference }} and initiate Smart Donor Matching?');">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-success btn-sm rounded-pill px-2.5 fw-bold" style="font-size: 11px;">
+                        <i class="bi bi-check2-circle me-1"></i>Verify &amp; Match
+                      </button>
+                    </form>
+                    <form action="{{ url_for('admin.reject_request', req_id=req.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Reject request {{ req.request_reference }}?');">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-2" style="font-size: 11px;">
+                        Reject
+                      </button>
+                    </form>
+
+                  {% elif req.is_active %}
+                    <!-- Flag for review dropdown -->
+                    <div class="dropdown d-inline">
+                      <button class="btn btn-outline-danger btn-sm rounded-pill px-2.5 dropdown-toggle" type="button" data-bs-toggle="dropdown" style="font-size: 11px;">
+                        <i class="bi bi-flag-fill me-1"></i>Flag
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end p-3 shadow" style="min-width: 260px;">
+                        <form action="{{ url_for('admin.flag_request', req_id=req.id) }}" method="POST">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                          <label class="form-label small fw-bold">Investigation Reason:</label>
+                          <textarea name="reason" class="form-control form-control-sm mb-2" rows="2" placeholder="e.g. Suspicious emergency frequency" required></textarea>
+                          <button type="submit" class="btn btn-danger btn-sm w-100 fw-bold">Flag for Review</button>
+                        </form>
+                      </div>
+                    </div>
+
+                  {% else %}
+                    <span class="text-muted small">—</span>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5 text-muted small">
+        <i class="bi bi-clipboard2-check fs-1 d-block mb-2 text-secondary"></i>
+        No requests found matching the selected filter.
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

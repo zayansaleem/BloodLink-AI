@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Conversation - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container" style="max-width: 820px;">
+
+    <!-- Conversation Header & Request Metadata -->
+    <div class="card card-saas p-4 bg-white mb-3 shadow-sm border">
+      <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 pb-3 mb-3 border-bottom">
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <h5 class="fw-bold text-navy mb-0">
+              {% if current_user.role == 'DONOR' %}
+                <i class="bi bi-hospital text-crimson me-1"></i>{{ conv.hospital.organization_name }}
+              {% elif current_user.role == 'HOSPITAL' %}
+                <i class="bi bi-person-heart text-danger me-1"></i>{{ conv.donor.name }}
+              {% else %}
+                {{ conv.hospital.organization_name }} &bull; {{ conv.donor.name }}
+              {% endif %}
+            </h5>
+            <span class="badge bg-danger bg-opacity-10 text-crimson fw-bold">{{ conv.blood_request.blood_group }}</span>
+          </div>
+          <small class="text-secondary">
+            Request: <strong>{{ conv.blood_request.request_reference }}</strong> &bull; Location: {{ conv.blood_request.location }}
+          </small>
+        </div>
+
+        <a href="{{ url_for('communication.list_conversations') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 align-self-start align-self-sm-auto">
+          <i class="bi bi-arrow-left me-1"></i>All Chats
+        </a>
+      </div>
+
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 small text-muted" style="font-size: 11px;">
+        <span><i class="bi bi-shield-check text-success me-1"></i>Clinical Transfusion Coordination Channel</span>
+        <span>Urgency: <strong class="text-navy">{{ conv.blood_request.urgency_level }}</strong> &bull; Need: <strong>{{ conv.blood_request.units_required }} Unit(s)</strong></span>
+      </div>
+    </div>
+
+    <!-- Message History Stream -->
+    <div class="card card-saas p-4 bg-white mb-3 shadow-sm border" style="min-height: 380px; max-height: 520px; overflow-y: auto;" id="messageStream">
+      {% if messages %}
+        {% for msg in messages %}
+        <div class="d-flex flex-column mb-3 {% if msg.sender_user_id == current_user.id %}align-items-end{% else %}align-items-start{% endif %}">
+          <div class="d-flex align-items-center gap-2 mb-1" style="font-size: 11px;">
+            <span class="fw-bold {% if msg.sender_user_id == current_user.id %}text-crimson{% else %}text-navy{% endif %}">
+              {{ msg.sender.name }}
+            </span>
+            <span class="text-muted">{{ msg.created_at.strftime('%d %b, %H:%M') }}</span>
+            {% if msg.sender_user_id != current_user.id and not msg.is_reported %}
+            <button type="button" class="btn btn-link text-muted p-0 text-decoration-none" style="font-size: 10px;" data-bs-toggle="modal" data-bs-target="#reportModal{{ msg.id }}" title="Report Inappropriate Message">
+              <i class="bi bi-flag"></i> Report
+            </button>
+            {% endif %}
+          </div>
+
+          <div class="p-3 rounded-3 shadow-2xs text-break {% if msg.sender_user_id == current_user.id %}bg-crimson text-white{% else %}bg-light border text-dark{% endif %}" style="max-width: 80%; font-size: 13.5px; line-height: 1.5;">
+            {{ msg.message_body|safe }}
+          </div>
+
+          {% if msg.is_reported %}
+          <small class="text-warning fst-italic mt-1" style="font-size: 10px;">
+            <i class="bi bi-flag-fill me-1"></i>Reported for administrative review
+          </small>
+          {% endif %}
+        </div>
+
+        <!-- Report Modal for Inappropriate Message -->
+        <div class="modal fade" id="reportModal{{ msg.id }}" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow">
+              <div class="modal-header py-2.5 px-3 bg-light">
+                <h6 class="modal-title fw-bold text-navy" style="font-size: 13px;">Report Message</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form action="{{ url_for('communication.report_message', message_id=msg.id) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body p-3">
+                  <p class="small text-secondary mb-2" style="font-size: 11px;">
+                    Report inappropriate, spam, or abusive communications to platform safety auditors.
+                  </p>
+                  <label class="form-label small fw-semibold text-secondary">Reason</label>
+                  <textarea name="reason" rows="2" class="form-control form-control-sm" placeholder="Describe the safety concern..." required></textarea>
+                </div>
+                <div class="modal-footer py-2 px-3 bg-light">
+                  <button type="button" class="btn btn-outline-secondary btn-sm py-1" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-danger btn-sm py-1 fw-bold">Submit Report</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {% endfor %}
+      {% else %}
+        <div class="text-center py-5 text-muted small my-auto">
+          <i class="bi bi-chat-quote fs-1 text-secondary d-block mb-2"></i>
+          Channel opened. Send a message below to begin clinical coordination.
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Message Composer Form -->
+    <div class="card card-saas p-3 p-sm-4 bg-white shadow-sm border">
+      <form action="{{ url_for('communication.send_message', conversation_id=conv.id) }}" method="POST" id="msgForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-2">
+          <textarea name="message_body" id="messageBody" class="form-control" rows="3" placeholder="Type your message regarding timing, donor preparation, or donation department..." required maxlength="1500"></textarea>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="text-muted small" style="font-size: 11px;">
+            <span id="charCount">0</span> / 1,500 characters
+          </span>
+          <button type="submit" class="btn btn-crimson btn-sm px-4 fw-bold shadow-xs">
+            <i class="bi bi-send-fill me-1.5"></i>Send Message
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const stream = document.getElementById('messageStream');
+    if (stream) {
+      stream.scrollTop = stream.scrollHeight;
+    }
+    const input = document.getElementById('messageBody');
+    const counter = document.getElementById('charCount');
+    if (input && counter) {
+      input.addEventListener('input', function() {
+        counter.textContent = input.value.length;
+      });
+    }
+  });
+</script>
+{% endblock %}

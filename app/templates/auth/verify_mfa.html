@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Administrator MFA Verification - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5 d-flex align-items-center">
+  <div class="container" style="max-width: 480px;">
+    <div class="card card-saas p-4 p-md-5 bg-white border shadow-sm text-center">
+      
+      <div class="d-inline-flex align-items-center justify-content-center bg-dark text-white rounded-circle fs-3 mb-3 mx-auto" style="width: 68px; height: 68px;">
+        <i class="bi bi-shield-lock-fill"></i>
+      </div>
+
+      <h4 class="fw-bold text-navy mb-1">Two-Factor Authentication</h4>
+      <p class="text-secondary small mb-4">
+        Administrator accounts require multi-factor verification. Enter the 6-digit TOTP security code from your authenticator application.
+      </p>
+
+      <form action="{{ url_for('auth.verify_mfa') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mb-4">
+          <label class="form-label small fw-bold text-secondary d-block">6-Digit Security Code</label>
+          <input type="text" name="mfa_token" required maxlength="6" pattern="[0-9]{6}" autofocus placeholder="123456" class="form-control text-center fs-3 fw-bold tracking-widest font-monospace py-2" autocomplete="one-time-code" style="letter-spacing: 0.35em;">
+          <small class="text-muted d-block mt-2">Code refreshes every 30 seconds</small>
+        </div>
+
+        <button type="submit" class="btn btn-navy w-100 py-2 fw-bold rounded-pill mb-3">
+          <i class="bi bi-check2-shield me-2"></i>Verify &amp; Enter Admin Console
+        </button>
+
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-link text-secondary text-decoration-none small">
+          Cancel and Sign Out
+        </a>
+      </form>
+
+      {% if not is_prod_mode %}
+      <div class="mt-4 p-2 bg-light rounded border text-start" style="font-size: 11px;">
+        <strong class="d-block text-dark mb-1"><i class="bi bi-tools text-warning me-1"></i>Development Sandbox Notice:</strong>
+        <span class="text-muted">If MFA was not pre-configured on this account, setup is available at <a href="{{ url_for('auth.setup_mfa') }}" class="text-crimson fw-bold">MFA Setup</a>.</span>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

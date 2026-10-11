@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="auth-split-wrapper">
+  <!-- Left Side: Form Controls -->
+  <div class="auth-form-side">
+    <div class="mb-4">
+      <div class="d-inline-flex align-items-center gap-2 mb-2">
+        <span class="d-inline-flex align-items-center justify-content-center bg-crimson rounded-3 text-white" style="width: 40px; height: 40px;">
+          <i class="bi bi-droplet-fill fs-5"></i>
+        </span>
+        <span class="fw-bold tracking-tight text-dark fs-4">
+          BloodLink<span class="text-crimson">.AI</span>
+        </span>
+      </div>
+      <h2 class="fw-extrabold text-dark tracking-tight">Welcome Back</h2>
+      <p class="text-secondary small">Sign in to your authorized coordinator or voluntary donor account.</p>
+    </div>
+
+    <form action="{{ url_for('auth.login') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="mb-3">
+        <label class="form-label small fw-bold text-secondary">Email Address</label>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted border-end-0">
+            <i class="bi bi-envelope"></i>
+          </span>
+          <input type="email" name="email" required placeholder="name@organization.org" class="form-control border-start-0 py-2" autocomplete="email">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <label class="form-label small fw-bold text-secondary mb-0">Password</label>
+        </div>
+        <div class="input-group">
+          <span class="input-group-text bg-light text-muted border-end-0">
+            <i class="bi bi-lock"></i>
+          </span>
+          <input type="password" name="password" id="loginPasswordInput" required placeholder="••••••••" class="form-control border-start-0 border-end-0 py-2" autocomplete="current-password">
+          <button class="btn btn-outline-secondary border-start-0" type="button" id="toggleLoginPasswordBtn" title="Toggle password visibility">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-4 small flex-wrap gap-2">
+        <div class="form-check mb-0">
+          <input type="checkbox" name="remember" class="form-check-input" id="rememberMe">
+          <label class="form-check-label text-secondary" for="rememberMe">Remember me</label>
+        </div>
+        <a href="{{ url_for('auth.forgot_password') }}" class="text-crimson fw-semibold text-decoration-none">Forgot Password?</a>
+      </div>
+
+      <button type="submit" id="loginSubmitBtn" class="btn btn-crimson w-100 py-2 fw-bold rounded-3 shadow-sm">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In to Portal
+      </button>
+    </form>
+
+    <div class="mt-4 pt-3 border-top text-center text-muted small">
+      Don't have an account yet? 
+      <a href="{{ url_for('auth.register') }}" class="text-crimson fw-bold text-decoration-none ms-1">Create Account</a>
+    </div>
+
+    <!-- Quick Pre-Configured Demo Accounts Box -->
+    <div class="mt-4 p-3 rounded-3 bg-light border text-secondary" style="font-size: 11px;">
+      <div class="d-flex align-items-center gap-1 text-dark fw-bold mb-2">
+        <i class="bi bi-key-fill text-warning"></i>
+        <span>Pre-Configured Demo Accounts (Sandbox)</span>
+      </div>
+      <div class="row g-2">
+        <div class="col-sm-6">
+          <div class="p-2 bg-white rounded border">
+            <span class="d-block fw-semibold text-danger">Voluntary Donor</span>
+            <code class="d-block">arjun@donor.com</code>
+            <small class="text-muted">Password: <code>donor123</code></small>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="p-2 bg-white rounded border">
+            <span class="d-block fw-semibold text-primary">Apollo Hospital</span>
+            <code class="d-block">apollo@hospital.com</code>
+            <small class="text-muted">Password: <code>hospital123</code></small>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="p-2 bg-white rounded border">
+            <span class="d-block fw-semibold text-crimson">Red Cross Blood Bank</span>
+            <code class="d-block">redcross@bloodbank.com</code>
+            <small class="text-muted">Password: <code>bank123</code></small>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="p-2 bg-white rounded border">
+            <span class="d-block fw-semibold text-dark">Platform Admin</span>
+            <code class="d-block">admin@bloodlink.ai</code>
+            <small class="text-muted">Password: <code>admin123</code></small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Healthcare Visual Panel -->
+  <div class="auth-image-side d-none d-lg-flex" style="background-image: url('{{ url_for('static', filename='images/login-healthcare.jpg') }}');">
+    <div class="auth-image-overlay"></div>
+    <div class="auth-image-content">
+      <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-25 text-white fw-bold small mb-3">
+        <i class="bi bi-activity"></i>
+        <span>Critical Healthcare Logistics Grid</span>
+      </div>
+      <h2 class="display-6 fw-extrabold text-white mb-3">
+        Seconds Save Lives.<br />
+        Connected Care Matters.
+      </h2>
+      <p class="text-white text-opacity-75 small leading-relaxed mb-4" style="max-width: 460px;">
+        Empowering over 36 Indian states and union territories with real-time blood bank inventory visibility, smart donor matching, and explainable emergency triage scoring.
+      </p>
+      <div class="d-flex align-items-center gap-4 text-white text-opacity-90 small pt-2 border-top border-white border-opacity-25">
+        <div>
+          <strong class="d-block fs-5 fw-bold">100%</strong>
+          <span style="font-size: 11px;">Verified Facilities</span>
+        </div>
+        <div>
+          <strong class="d-block fs-5 fw-bold">28 + 8</strong>
+          <span style="font-size: 11px;">States &amp; Territories</span>
+        </div>
+        <div>
+          <strong class="d-block fs-5 fw-bold">0ms</strong>
+          <span style="font-size: 11px;">Inventory Query Latency</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    initPasswordToggle('toggleLoginPasswordBtn', 'loginPasswordInput');
+  });
+</script>
+{% endblock %}

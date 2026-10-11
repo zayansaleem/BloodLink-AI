@@ -1,0 +1,415 @@
+{% extends 'base.html' %}
+
+{% block title %}Explore Blood Banks Across India - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container">
+    
+    <!-- Page Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4">
+      <div>
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-danger bg-opacity-10 text-crimson fw-bold small mb-2 border border-danger border-opacity-20">
+          <i class="bi bi-hospital-fill"></i>
+          <span>Nationwide Facility Directory &bull; Verified Laboratories</span>
+        </div>
+        <h1 class="display-6 fw-extrabold text-navy mb-1">Explore Blood Banks Across India</h1>
+        <p class="text-secondary small mb-0">Browse accredited blood banks, inspect reported component reserves, and access direct emergency coordinates.</p>
+      </div>
+      <div class="mt-3 mt-md-0 d-flex gap-2">
+        <button type="button" class="btn btn-outline-crimson btn-sm px-3 shadow-xs" onclick="toggleDirectoryMapView()">
+          <i class="bi bi-map me-1"></i><span id="mapToggleBtnText">Show Map</span>
+        </button>
+        <a href="{{ url_for('main.search') }}" class="btn btn-navy btn-sm px-3 shadow-xs">
+          <i class="bi bi-search me-1"></i>Search Available Units
+        </a>
+      </div>
+    </div>
+
+    <!-- Collapsible Interactive Map Section -->
+    <div id="directoryMapContainer" class="card card-saas p-3 mb-4 bg-white border shadow-sm" style="display: none;">
+      <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+        <span class="small fw-bold text-navy"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Participating Blood Banks Across India</span>
+        <small class="text-muted" style="font-size: 11px;">Pins represent verified facility coordinates</small>
+      </div>
+      <div id="directoryMap" style="height: 420px; border-radius: 12px;"></div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="card card-saas p-4 mb-4 bg-white shadow-sm border">
+      <form method="GET" action="{{ url_for('main.blood_banks') }}">
+        <div class="row g-3 align-items-end">
+          
+          <!-- Facility Name Search -->
+          <div class="col-md-3 col-sm-6">
+            <label class="form-label small fw-bold text-secondary">Search by Name / City</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+              <input type="text" name="q" value="{{ search_query or '' }}" placeholder="e.g. Apollo, Red Cross, Civil" class="form-control border-start-0">
+            </div>
+          </div>
+
+          <!-- State / UT Filter -->
+          <div class="col-md-3 col-sm-6">
+            <label class="form-label small fw-bold text-secondary">State / Union Territory</label>
+            <select name="state" id="dir_state" class="form-select">
+              <option value="">All States &amp; UTs</option>
+              {% for st in all_indian_states %}
+              <option value="{{ st }}" {% if selected_state == st %}selected{% endif %}>{{ st }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- District Filter -->
+          <div class="col-md-2 col-sm-6">
+            <label class="form-label small fw-bold text-secondary">District</label>
+            <select name="district" id="dir_district" class="form-select">
+              <option value="">All Districts</option>
+              {% for d in available_districts %}
+              <option value="{{ d }}" {% if selected_district == d %}selected{% endif %}>{{ d }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Blood Group In-Stock Filter -->
+          <div class="col-md-2 col-sm-6">
+            <label class="form-label small fw-bold text-secondary">Blood In-Stock</label>
+            <select name="blood_group" class="form-select fw-bold text-dark">
+              <option value="">Any In-Stock</option>
+              {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+              <option value="{{ bg }}" {% if selected_group == bg %}selected{% endif %}>{{ bg }} Available</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Filter Submit Buttons -->
+          <div class="col-md-2 col-sm-12 d-flex gap-2">
+            <button type="submit" class="btn btn-crimson btn-sm flex-grow-1 fw-bold py-2 shadow-xs">
+              <i class="bi bi-funnel me-1"></i>Filter
+            </button>
+            {% if selected_state or selected_district or search_query or selected_group %}
+            <a href="{{ url_for('main.blood_banks') }}" class="btn btn-outline-secondary btn-sm px-2 py-2" title="Reset Filters">
+              <i class="bi bi-arrow-counterclockwise"></i>
+            </a>
+            {% endif %}
+          </div>
+
+        </div>
+      </form>
+    </div>
+
+    <!-- Active Filters Summary -->
+    {% if selected_state or selected_district or search_query or selected_group %}
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+      <span class="small text-muted fw-semibold">Active Directory Filters:</span>
+      {% if search_query %}
+      <span class="badge bg-dark rounded-pill px-3 py-1.5">Query: "{{ search_query }}"</span>
+      {% endif %}
+      {% if selected_state %}
+      <span class="badge bg-danger bg-opacity-10 text-crimson border border-danger border-opacity-25 rounded-pill px-3 py-1.5">State: {{ selected_state }}</span>
+      {% endif %}
+      {% if selected_district %}
+      <span class="badge bg-danger bg-opacity-10 text-crimson border border-danger border-opacity-25 rounded-pill px-3 py-1.5">District: {{ selected_district }}</span>
+      {% endif %}
+      {% if selected_group %}
+      <span class="badge bg-danger rounded-pill px-3 py-1.5">Stocking: {{ selected_group }}</span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Directory Results Toolbar -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <span class="small fw-bold text-navy">
+        <i class="bi bi-buildings-fill me-1 text-primary"></i>Showing <strong>{{ total_count }}</strong> verified blood bank facility(s)
+      </span>
+
+      <div class="d-flex align-items-center gap-3">
+        <!-- Page size selector -->
+        <div class="d-flex align-items-center gap-1.5 small text-muted">
+          <span>Per page:</span>
+          <div class="btn-group btn-group-sm" role="group">
+            {% for ps in [12, 24, 48] %}
+            <a href="{{ url_for('main.blood_banks', per_page=ps, view=view_mode, state=selected_state, district=selected_district, q=search_query, blood_group=selected_group) }}" 
+               class="btn {% if per_page == ps %}btn-danger text-white{% else %}btn-outline-secondary{% endif %} py-0.5 px-2">
+              {{ ps }}
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- View mode toggle -->
+        <div class="btn-group btn-group-sm" role="group" aria-label="View toggle">
+          <a href="{{ url_for('main.blood_banks', view='cards', per_page=per_page, state=selected_state, district=selected_district, q=search_query, blood_group=selected_group) }}" 
+             class="btn {% if view_mode != 'table' %}btn-danger text-white{% else %}btn-outline-secondary{% endif %}" title="Card Grid View">
+            <i class="bi bi-grid-fill me-1"></i>Cards
+          </a>
+          <a href="{{ url_for('main.blood_banks', view='table', per_page=per_page, state=selected_state, district=selected_district, q=search_query, blood_group=selected_group) }}" 
+             class="btn {% if view_mode == 'table' %}btn-danger text-white{% else %}btn-outline-secondary{% endif %}" title="Compact Table View">
+            <i class="bi bi-table me-1"></i>Table
+          </a>
+        </div>
+      </div>
+    </div>
+
+    {% if banks_data %}
+      {% if view_mode == 'table' %}
+      <!-- Tabular Blood Bank View -->
+      <div class="card card-saas p-0 overflow-hidden bg-white shadow-sm border mb-4">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+          <span class="small fw-bold text-navy">
+            <i class="bi bi-table me-1 text-primary"></i>Blood Bank Facility Directory List
+          </span>
+          <small class="text-muted" style="font-size: 11px;">Page {{ page }} of {{ pagination.pages }} &bull; {{ total_count }} total facilities</small>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+              <tr>
+                <th class="ps-4">Facility Name</th>
+                <th>Location</th>
+                <th>License / Ref</th>
+                <th>Stock Highlights</th>
+                <th>Total Reported Units</th>
+                <th class="pe-4 text-end">Contact Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b_item in banks_data %}
+              {% set org = b_item.org %}
+              {% set inv_map = b_item.inventory_map %}
+              {% set total_units = b_item.total_units %}
+              <tr>
+                <td class="ps-4">
+                  <div class="fw-bold text-navy">{{ org.organization_name }}</div>
+                  <div class="d-flex align-items-center gap-1 mt-1">
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 9px;">Verified</span>
+                    {% if org.is_demo %}
+                    <span class="badge bg-light text-muted border" style="font-size: 9px;">DEMO DATA</span>
+                    {% endif %}
+                  </div>
+                </td>
+                <td>
+                  <span class="d-block fw-semibold text-dark">{{ org.city }}</span>
+                  <span class="text-muted" style="font-size: 11px;">{{ org.district or '' }}, {{ org.state }}</span>
+                </td>
+                <td class="text-muted" style="font-size: 11px;">
+                  {{ org.registration_reference or 'Active' }}
+                </td>
+                <td>
+                  <div class="d-flex flex-wrap gap-1" style="max-width: 240px;">
+                    {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+                    {% set u = inv_map.get(bg, 0) %}
+                    {% if u > 0 %}
+                    <span class="badge {% if u >= 10 %}bg-success{% elif u >= 3 %}bg-warning text-dark{% else %}bg-danger{% endif %}" style="font-size: 9px;">
+                      {{ bg }}: {{ u }}
+                    </span>
+                    {% endif %}
+                    {% endfor %}
+                  </div>
+                </td>
+                <td>
+                  <span class="badge bg-light text-navy border fw-bold px-2 py-1">
+                    {{ total_units }} Units
+                  </span>
+                </td>
+                <td class="pe-4 text-end">
+                  <div class="d-inline-flex gap-1">
+                    <a href="tel:{{ org.contact_phone }}" class="btn btn-outline-crimson btn-sm rounded-pill px-3" style="font-size: 11px;">
+                      <i class="bi bi-telephone-fill me-1"></i>{{ org.contact_phone }}
+                    </a>
+                    {% if org.latitude and org.longitude %}
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ org.latitude }},{{ org.longitude }}" target="_blank" rel="noopener noreferrer" class="btn btn-light btn-sm border" title="Get Directions">
+                      <i class="bi bi-compass"></i>
+                    </a>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% else %}
+      <!-- Card Grid View -->
+      <div class="row g-4 mb-4">
+        {% for b_item in banks_data %}
+        {% set org = b_item.org %}
+        {% set inv_map = b_item.inventory_map %}
+        {% set total_units = b_item.total_units %}
+        <div class="col-md-6 col-lg-4">
+          <div class="card card-saas p-4 h-100 card-hover-lift bg-white">
+            
+            <!-- Facility Title & License -->
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h5 class="fw-bold text-navy mb-1">{{ org.organization_name }}</h5>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 small" style="font-size: 10px;">
+                  <i class="bi bi-patch-check-fill me-1"></i>Verified Blood Bank
+                </span>
+              </div>
+              <span class="badge bg-light text-navy border fw-bold px-2 py-1" style="font-size: 11px;">
+                {{ total_units }} Units Total
+              </span>
+            </div>
+
+            <!-- Location Info -->
+            <p class="text-muted small mb-3">
+              <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ org.address }}, {{ org.city }}, {{ org.district or '' }} ({{ org.state }})
+            </p>
+
+            <!-- Blood Group Mini Stock Chips -->
+            <div class="mb-3">
+              <div class="small fw-bold text-secondary mb-1.5" style="font-size: 10px; text-transform: uppercase;">Reported Blood Stock:</div>
+              <div class="d-flex flex-wrap gap-1">
+                {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+                {% set u = inv_map.get(bg, 0) %}
+                <span class="badge {% if u >= 10 %}bg-success{% elif u >= 3 %}bg-warning text-dark{% elif u > 0 %}bg-danger{% else %}bg-light text-muted border{% endif %}" style="font-size: 10px;" title="{{ u }} Units">
+                  {{ bg }}: {{ u }}
+                </span>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Footer Actions & Contact -->
+            <div class="mt-auto pt-3 border-top">
+              <div class="d-flex justify-content-between align-items-center mb-2" style="font-size: 11px;">
+                <span class="text-muted">License: {{ org.registration_reference or 'Active' }}</span>
+                {% if org.is_demo %}
+                <span class="badge bg-light text-muted border">DEMO DATA</span>
+                {% endif %}
+              </div>
+
+              <div class="d-flex gap-2">
+                <a href="tel:{{ org.contact_phone }}" class="btn btn-crimson btn-sm flex-grow-1" style="font-size: 12px;">
+                  <i class="bi bi-telephone-fill me-1"></i>{{ org.contact_phone }}
+                </a>
+                {% if org.latitude and org.longitude %}
+                <a href="https://www.google.com/maps/search/?api=1&query={{ org.latitude }},{{ org.longitude }}" target="_blank" rel="noopener noreferrer" class="btn btn-light btn-sm border" title="Get Directions">
+                  <i class="bi bi-compass"></i>
+                </a>
+                {% endif %}
+              </div>
+            </div>
+
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Pagination Component -->
+      {% if pagination and pagination.pages > 1 %}
+      <nav class="d-flex justify-content-between align-items-center flex-wrap gap-2 my-4" aria-label="Blood banks directory pagination">
+        <small class="text-muted">
+          Showing page <strong>{{ pagination.page }}</strong> of <strong>{{ pagination.pages }}</strong> ({{ total_count }} total facilities)
+        </small>
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('main.blood_banks', page=pagination.prev_num, per_page=per_page, view=view_mode, state=selected_state, district=selected_district, q=search_query, blood_group=selected_group) }}">&laquo; Prev</a>
+          </li>
+          {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+              <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('main.blood_banks', page=p, per_page=per_page, view=view_mode, state=selected_state, district=selected_district, q=search_query, blood_group=selected_group) }}">{{ p }}</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+            {% endif %}
+          {% endfor %}
+          <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('main.blood_banks', page=pagination.next_num, per_page=per_page, view=view_mode, state=selected_state, district=selected_district, q=search_query, blood_group=selected_group) }}">Next &raquo;</a>
+          </li>
+        </ul>
+      </nav>
+      {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="card card-saas p-5 text-center bg-white border mb-4">
+      <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-crimson rounded-circle p-4 mx-auto mb-3" style="width: 72px; height: 72px;">
+        <i class="bi bi-hospital fs-2"></i>
+      </div>
+      <h4 class="fw-bold text-navy mb-2">No blood banks match your search criteria.</h4>
+      <p class="text-secondary small mb-4 mx-auto" style="max-width: 500px;">
+        Try resetting your filters or expanding your geographic criteria to see facilities across the state or nationwide grid.
+      </p>
+      <a href="{{ url_for('main.blood_banks') }}" class="btn btn-crimson btn-sm px-4 align-self-center">
+        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let directoryMapInstance = null;
+  const banksGeoJson = {{ banks_json|tojson|safe }};
+
+  function toggleDirectoryMapView() {
+    const mapContainer = document.getElementById('directoryMapContainer');
+    const toggleBtnText = document.getElementById('mapToggleBtnText');
+    if (mapContainer.style.display === 'none') {
+      mapContainer.style.display = 'block';
+      toggleBtnText.textContent = 'Hide Map';
+      if (!directoryMapInstance) {
+        initDirectoryMap();
+      } else {
+        directoryMapInstance.invalidateSize();
+      }
+      mapContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      mapContainer.style.display = 'none';
+      toggleBtnText.textContent = 'Show Map';
+    }
+  }
+
+  function initDirectoryMap() {
+    const mapElement = document.getElementById('directoryMap');
+    if (!mapElement) return;
+
+    directoryMapInstance = L.map('directoryMap').setView([22.5, 78.9], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(directoryMapInstance);
+
+    const markers = [];
+    (banksGeoJson || []).forEach(bank => {
+      if (bank.lat && bank.lng) {
+        const marker = L.marker([bank.lat, bank.lng])
+          .addTo(directoryMapInstance)
+          .bindPopup(`
+            <div style="font-family: inherit; font-size: 12px; min-width: 180px;">
+              <strong style="color: #14243A; display: block; font-size: 13px;">${bank.name}</strong>
+              <div style="color: #667085; margin: 4px 0;">${bank.address}, ${bank.city}</div>
+              <div style="font-weight: 700; color: #D7263D; margin-bottom: 6px;">${bank.total_units} Units Reported</div>
+              <a href="tel:${bank.phone}" style="display: inline-block; background: #D7263D; color: #fff; padding: 4px 10px; border-radius: 9999px; text-decoration: none; font-size: 11px;">Call: ${bank.phone}</a>
+            </div>
+          `);
+        markers.push(marker);
+      }
+    });
+
+    if (markers.length > 0) {
+      const group = L.featureGroup(markers);
+      directoryMapInstance.fitBounds(group.getBounds().pad(0.15));
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initLocationCascade(
+      'dir_state',
+      'dir_district',
+      null,
+      '{{ selected_district or "" }}',
+      '',
+      true
+    );
+  });
+</script>
+{% endblock %}

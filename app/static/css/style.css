@@ -1,0 +1,1038 @@
+/* ========================================================
+   BloodLink AI - Modern Pan-India HealthTech UI Theme
+   Inspired by e-RaktKosh national blood grid functionality
+   with modern healthcare technology startup aesthetics
+   ======================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Official BloodLink AI Reference Brand Palette */
+  --primary-crimson: #C91436;
+  --primary-crimson-dark: #8E0A24;
+  --dark-navy: #14243A;
+  --white: #FFFFFF;
+  --bg-light: #F7F5F6;
+  --soft-pink: #FFF0F3;
+  --muted-grey: #667085;
+  --success-green: #16845B;
+  --warning-amber: #E9A23B;
+  
+  /* Coordinated Blood Donation Visual Identity (Reference Theme) */
+  --blood-deep: #640012;
+  --blood-crimson: #8E0A24;
+  --blood-primary: #C91436;
+  --blood-vibrant: #E6193E;
+  --blood-bright: #FF2E56;
+  --blood-pink: #FFF0F3;
+  --blood-pink-light: #FFF8F9;
+  --blood-pink-border: #FFCCD5;
+  --blood-gradient: linear-gradient(135deg, #640012 0%, #8E0A24 40%, #C91436 100%);
+  --blood-hero-gradient: radial-gradient(circle at 85% 20%, rgba(255, 46, 86, 0.25) 0%, transparent 45%), linear-gradient(140deg, #580010 0%, #850820 40%, #B80F30 100%);
+  --blood-glow: 0 8px 24px rgba(201, 20, 54, 0.28);
+
+  /* Neutral & Functional */
+  --text-main: #14243A;
+  --text-muted: #667085;
+  --border-card: #E4E7EC;
+  --border-light: #F2F4F7;
+  --border-focus: #C91436;
+  --bg-dashboard: #F7F5F6;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px 0 rgba(20, 36, 58, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(20, 36, 58, 0.08), 0 1px 2px -1px rgba(20, 36, 58, 0.08);
+  --shadow-md: 0 4px 8px -2px rgba(20, 36, 58, 0.08), 0 2px 4px -2px rgba(20, 36, 58, 0.05);
+  --shadow-lg: 0 12px 16px -4px rgba(20, 36, 58, 0.08), 0 4px 6px -2px rgba(20, 36, 58, 0.03);
+  --shadow-xl: 0 20px 24px -4px rgba(20, 36, 58, 0.08), 0 8px 8px -4px rgba(20, 36, 58, 0.03);
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text-main);
+  background-color: #FFFFFF;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ========================================================
+   Brand Utilities & Color Classes
+   ======================================================== */
+.text-crimson {
+  color: var(--primary-crimson) !important;
+}
+
+.text-navy {
+  color: var(--dark-navy) !important;
+}
+
+.text-muted-custom {
+  color: var(--muted-grey) !important;
+}
+
+.bg-crimson {
+  background-color: var(--primary-crimson) !important;
+  color: #ffffff !important;
+}
+
+.bg-crimson-dark {
+  background-color: var(--primary-crimson-dark) !important;
+  color: #ffffff !important;
+}
+
+.bg-navy {
+  background-color: var(--dark-navy) !important;
+  color: #ffffff !important;
+}
+
+.bg-soft-pink {
+  background-color: var(--soft-pink) !important;
+}
+
+.bg-light-page {
+  background-color: var(--bg-light) !important;
+}
+
+/* Primary Crimson Button */
+.btn-crimson {
+  background-color: var(--primary-crimson);
+  border-color: var(--primary-crimson);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 9999px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-crimson:hover, .btn-crimson:focus {
+  background-color: var(--primary-crimson-dark);
+  border-color: var(--primary-crimson-dark);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(215, 38, 61, 0.25);
+}
+
+.btn-outline-crimson {
+  color: var(--primary-crimson);
+  border-color: var(--primary-crimson);
+  font-weight: 600;
+  border-radius: 9999px;
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-crimson:hover {
+  background-color: var(--primary-crimson);
+  border-color: var(--primary-crimson);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* Navy Button */
+.btn-navy {
+  background-color: var(--dark-navy);
+  border-color: var(--dark-navy);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.btn-navy:hover {
+  background-color: #0b1523;
+  color: #ffffff;
+}
+
+/* ========================================================
+   Card Aesthetics & Layout
+   ======================================================== */
+.card-saas {
+  background: #ffffff;
+  border: 1px solid var(--border-card);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card-saas:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #D0D5DD;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.dashboard-wrapper {
+  background-color: var(--bg-dashboard);
+  min-height: calc(100vh - 72px);
+}
+
+/* ========================================================
+   Hero Section & Visual Composition
+   ======================================================== */
+.hero-wrapper {
+  background: linear-gradient(180deg, #FFF5F6 0%, #FFFFFF 100%);
+  padding: 4.5rem 0 3.5rem 0;
+  border-bottom: 1px solid #F2F4F7;
+  position: relative;
+}
+
+.hero-image-card {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 24px 48px -12px rgba(20, 36, 58, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.hero-image-card img {
+  width: 100%;
+  height: 420px;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-floating-badge {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 0.85rem 1.25rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 24px rgba(20, 36, 58, 0.12);
+  z-index: 2;
+  transition: transform 0.2s ease;
+}
+
+.hero-badge-top-right {
+  top: 1.5rem;
+  right: 1.5rem;
+}
+
+.hero-badge-bottom-left {
+  bottom: 1.5rem;
+  left: 1.5rem;
+}
+
+/* Heartbeat pulse accent */
+@keyframes heartPulse {
+  0% { transform: scale(1); }
+  14% { transform: scale(1.15); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.12); }
+  70% { transform: scale(1); }
+}
+
+.heart-beat-icon {
+  display: inline-block;
+  animation: heartPulse 2.4s infinite;
+  color: var(--primary-crimson);
+}
+
+/* Critical urgency indicator (restrained, no strobe) */
+@keyframes softWarningGlow {
+  0% { box-shadow: 0 0 0 0 rgba(215, 38, 61, 0.35); }
+  70% { box-shadow: 0 0 0 6px rgba(215, 38, 61, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(215, 38, 61, 0); }
+}
+
+.priority-critical-pulse {
+  animation: softWarningGlow 2.5s infinite;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .heart-beat-icon, .priority-critical-pulse {
+    animation: none !important;
+  }
+}
+
+/* ========================================================
+   Interactive Blood Group Badges (Cards & Filters)
+   ======================================================== */
+.blood-group-badge-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem 0.75rem;
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-card);
+  border-radius: 16px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  color: var(--dark-navy);
+}
+
+.blood-group-badge-card .blood-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--primary-crimson);
+}
+
+.blood-group-badge-card .blood-sub {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted-grey);
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+}
+
+.blood-group-badge-card:hover {
+  border-color: var(--primary-crimson);
+  background: var(--soft-pink);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+  color: var(--primary-crimson);
+}
+
+.blood-group-badge-card.active {
+  border-color: var(--primary-crimson);
+  background: var(--primary-crimson);
+  color: #FFFFFF !important;
+}
+
+.blood-group-badge-card.active .blood-name {
+  color: #FFFFFF !important;
+}
+
+.blood-group-badge-card.active .blood-sub {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* ========================================================
+   Inventory Stock Level Indicators
+   ======================================================== */
+.stock-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+}
+
+.stock-pill-available {
+  background-color: #ECFDF3;
+  color: #027A48;
+  border: 1px solid #A6F4C5;
+}
+
+.stock-pill-limited {
+  background-color: #FFFAEB;
+  color: #B54708;
+  border: 1px solid #FEDF89;
+}
+
+.stock-pill-critical {
+  background-color: #FEF3F2;
+  color: #B42318;
+  border: 1px solid #FECDCA;
+}
+
+.stock-pill-outdated {
+  background-color: #F8F9FA;
+  color: #6c757d;
+  border: 1px solid #DEE2E6;
+}
+
+/* ========================================================
+   Form Controls & Modern Input Styling
+   ======================================================== */
+.form-control, .form-select {
+  border: 1px solid var(--border-card);
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+  color: var(--dark-navy);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-crimson);
+  box-shadow: 0 0 0 3px rgba(215, 38, 61, 0.12);
+  outline: none;
+}
+
+.form-control::placeholder {
+  color: #98A2B3;
+}
+
+/* Search Scope Pills */
+.scope-radio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-card);
+  background: #FFFFFF;
+  color: var(--muted-grey);
+  transition: all 0.2s ease;
+}
+
+.btn-check:checked + .scope-radio-btn {
+  background: var(--dark-navy);
+  border-color: var(--dark-navy);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-xs);
+}
+
+/* ========================================================
+   Pan-India State Quick Grid Cards
+   ======================================================== */
+.state-quick-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--dark-navy);
+}
+
+.state-quick-card:hover {
+  border-color: var(--primary-crimson);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+  color: var(--primary-crimson);
+}
+
+/* ========================================================
+   Dashboard Unified Sidebar & Layout
+   ======================================================== */
+.dashboard-container {
+  display: flex;
+  min-height: calc(100vh - 72px);
+  background-color: var(--bg-dashboard);
+}
+
+.dashboard-sidebar {
+  width: 260px;
+  background-color: #FFFFFF;
+  border-right: 1px solid var(--border-card);
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.dashboard-main {
+  flex-grow: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+@media (max-width: 991.98px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+  .dashboard-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-card);
+    padding: 1rem;
+  }
+  .dashboard-main {
+    padding: 1.25rem;
+  }
+}
+
+.sidebar-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted-grey);
+  text-decoration: none;
+  transition: all 0.15s ease;
+  margin-bottom: 0.25rem;
+}
+
+.sidebar-nav-link:hover {
+  color: var(--primary-crimson);
+  background-color: var(--soft-pink);
+}
+
+.sidebar-nav-link.active {
+  color: var(--primary-crimson);
+  background-color: var(--soft-pink);
+  font-weight: 700;
+}
+
+/* Distinctive Rewards Card */
+.rewards-card-featured {
+  background: linear-gradient(135deg, #14243A 0%, #1e3a5f 100%);
+  border-radius: 20px;
+  color: #FFFFFF;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 16px 32px -8px rgba(20, 36, 58, 0.25);
+}
+
+.rewards-card-featured::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(215, 38, 61, 0.3) 0%, rgba(215, 38, 61, 0) 70%);
+}
+
+.rewards-points-number {
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1;
+}
+
+/* ========================================================
+   Map Container
+   ======================================================== */
+#bloodBankMap, #directoryMap {
+  width: 100%;
+  height: 520px;
+  border-radius: 16px;
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ========================================================
+   Modern Split-Screen Auth Layouts
+   ======================================================== */
+.auth-split-wrapper {
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: stretch;
+  background-color: #FFFFFF;
+}
+
+.auth-form-side {
+  flex: 1 1 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3.5rem 4rem;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+@media (max-width: 991.98px) {
+  .auth-form-side {
+    padding: 2.5rem 1.5rem;
+    max-width: 100%;
+  }
+}
+
+.auth-image-side {
+  flex: 1 1 50%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 3.5rem;
+  background-size: cover;
+  background-position: center center;
+  color: #FFFFFF;
+}
+
+.auth-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(20, 36, 58, 0.45) 0%, rgba(166, 25, 46, 0.88) 100%);
+  z-index: 1;
+}
+
+.auth-image-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* ========================================================
+   Responsive Breakpoints & Mobile Hardening (320px - 1920px)
+   ======================================================== */
+
+/* Prevent horizontal overflow across all devices */
+html, body {
+  max-width: 100vw;
+  overflow-x: clip;
+}
+
+/* Accessible Touch Targets (min 44px for accessibility on mobile) */
+@media (max-width: 991.98px) {
+  .btn, .form-control, .form-select, .nav-link, .input-group-text {
+    min-height: 44px;
+  }
+
+  .btn-sm {
+    min-height: 38px;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+  }
+
+  /* Prevent automatic zoom on iOS Safari */
+  input.form-control, select.form-select, textarea.form-control {
+    font-size: 16px !important;
+  }
+}
+
+/* Offcanvas Navigation Styling */
+.offcanvas.offcanvas-end {
+  width: 320px;
+  max-width: 85vw;
+}
+
+.offcanvas-body .nav-link {
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  color: var(--dark-navy);
+  transition: all 0.15s ease;
+}
+
+.offcanvas-body .nav-link:hover,
+.offcanvas-body .nav-link.active {
+  background-color: var(--soft-pink);
+  color: var(--primary-crimson) !important;
+}
+
+/* Responsive Table Container & Touch Scroll */
+.table-responsive {
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.table-responsive table {
+  margin-bottom: 0;
+}
+
+@media (max-width: 576px) {
+  .table th, .table td {
+    padding: 0.6rem 0.65rem;
+    font-size: 0.82rem;
+  }
+}
+
+/* Responsive Map Sizing across breakpoints */
+@media (max-width: 767.98px) {
+  #bloodBankMap, #directoryMap {
+    height: 340px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  #bloodBankMap, #directoryMap {
+    height: 290px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  #bloodBankMap, #directoryMap {
+    height: 250px !important;
+  }
+}
+
+/* Responsive Chart Container */
+.chart-container-responsive {
+  position: relative;
+  height: 320px;
+  width: 100%;
+}
+
+@media (max-width: 767.98px) {
+  .chart-container-responsive {
+    height: 260px;
+  }
+}
+
+/* Hero Section Responsiveness */
+@media (max-width: 767.98px) {
+  .hero-wrapper {
+    padding: 2.5rem 0 2rem 0;
+  }
+
+  .hero-image-card img {
+    height: 240px;
+  }
+
+  .hero-floating-badge {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.75rem;
+    border-radius: 12px;
+  }
+
+  .hero-badge-top-right {
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .hero-badge-bottom-left {
+    bottom: 0.75rem;
+    left: 0.75rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .hero-image-card img {
+    height: 190px;
+  }
+}
+
+/* Dashboard Sidebar Mobile Optimizations */
+@media (max-width: 991.98px) {
+  .dashboard-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-card);
+    padding: 1rem;
+  }
+
+  .dashboard-sidebar nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .dashboard-sidebar .sidebar-nav-link {
+    margin-bottom: 0;
+    font-size: 0.82rem;
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--border-card);
+    background-color: #FFFFFF;
+    border-radius: 8px;
+  }
+
+  .dashboard-sidebar .sidebar-nav-link.active {
+    background-color: var(--soft-pink);
+    border-color: var(--primary-crimson);
+  }
+
+  .dashboard-main {
+    padding: 1.25rem 0.85rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .dashboard-sidebar .sidebar-nav-link {
+    flex: 1 1 calc(50% - 0.4rem);
+    font-size: 0.78rem;
+    padding: 0.45rem 0.6rem;
+  }
+}
+
+/* Form group responsiveness */
+@media (max-width: 576px) {
+  .auth-form-side {
+    padding: 2rem 1rem;
+  }
+}
+
+/* ========================================================
+   COORDINATED BLOOD DONATION PRESENTATION THEME
+   Inspired by Reference Presentation Identity:
+   - Deep red backgrounds & dark crimson accents
+   - Bright red & soft pink highlights
+   - White typography on dark crimson surfaces
+   - Blood-drop & heartbeat / EKG iconography
+   - High visual contrast & accessible layouts
+   ======================================================== */
+
+.bg-blood-deep {
+  background-color: var(--blood-deep) !important;
+  color: #FFFFFF !important;
+}
+
+.bg-blood-crimson {
+  background-color: var(--blood-crimson) !important;
+  color: #FFFFFF !important;
+}
+
+.bg-blood-gradient {
+  background: var(--blood-gradient) !important;
+  color: #FFFFFF !important;
+}
+
+.bg-blood-hero {
+  background: var(--blood-hero-gradient) !important;
+  color: #FFFFFF !important;
+}
+
+.bg-blood-pink {
+  background-color: var(--blood-pink) !important;
+}
+
+.text-blood-crimson {
+  color: var(--blood-crimson) !important;
+}
+
+.text-blood-bright {
+  color: var(--blood-bright) !important;
+}
+
+.border-blood-crimson {
+  border-color: var(--blood-crimson) !important;
+}
+
+.border-blood-pink {
+  border-color: var(--blood-pink-border) !important;
+}
+
+/* Presentation-Inspired Hero Section */
+.hero-presentation {
+  background: var(--blood-hero-gradient);
+  color: #FFFFFF;
+  position: relative;
+  overflow: hidden;
+  padding: 4.5rem 0 3.75rem 0;
+  border-bottom: 3px solid var(--blood-bright);
+}
+
+.hero-presentation h1,
+.hero-presentation h2 {
+  color: #FFFFFF !important;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.18;
+}
+
+.hero-presentation .hero-subtitle {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  max-width: 620px;
+}
+
+.hero-pill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #FFFFFF;
+  font-size: 0.82rem;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+}
+
+/* Presentation Primary CTA Buttons */
+.btn-presentation-white {
+  background-color: #FFFFFF;
+  color: var(--blood-crimson) !important;
+  font-weight: 700;
+  border-radius: 9999px;
+  padding: 0.75rem 1.75rem;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-presentation-white:hover {
+  background-color: var(--blood-pink);
+  color: var(--blood-deep) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+
+.btn-presentation-outline {
+  background: transparent;
+  color: #FFFFFF !important;
+  font-weight: 700;
+  border-radius: 9999px;
+  padding: 0.75rem 1.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-presentation-outline:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #FFFFFF !important;
+  border-color: #FFFFFF;
+  transform: translateY(-2px);
+}
+
+/* Blood Drop Avatar Motif */
+.blood-drop-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: var(--blood-gradient);
+  color: #FFFFFF;
+  box-shadow: var(--blood-glow);
+  flex-shrink: 0;
+}
+
+.blood-drop-avatar i {
+  transform: rotate(45deg);
+}
+
+/* Medical Accent Cards */
+.card-blood-accent {
+  background: #FFFFFF;
+  border: 1px solid var(--border-card);
+  border-top: 4px solid var(--blood-crimson);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.card-blood-accent:hover {
+  transform: translateY(-3px);
+  border-color: var(--blood-bright);
+  border-top-color: var(--blood-bright);
+  box-shadow: 0 10px 24px rgba(201, 20, 54, 0.12);
+}
+
+/* Stat Counter Box with Visual Identity */
+.stat-counter-box {
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-card);
+  border-radius: 16px;
+  padding: 1.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.stat-counter-box:hover {
+  border-color: var(--blood-crimson);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.stat-counter-box .stat-number {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--blood-crimson);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.stat-counter-box .stat-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted-grey);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.35rem;
+}
+
+/* Heartbeat EKG Animated Graphic Accent */
+.ekg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--blood-pink);
+  color: var(--blood-crimson);
+  border: 1px solid var(--blood-pink-border);
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* Autocomplete Suggestions Menu */
+#locationSuggestions {
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  background: #FFFFFF;
+}
+
+#locationSuggestions .list-group-item {
+  border: none;
+  border-bottom: 1px solid #F2F4F7;
+  padding: 0.65rem 0.95rem;
+  transition: background-color 0.15s ease;
+}
+
+#locationSuggestions .list-group-item:hover {
+  background-color: var(--blood-pink);
+  color: var(--blood-crimson);
+}
+
+#locationSuggestions .list-group-item:last-child {
+  border-bottom: none;
+}
+
+/* ========================================================
+   Subtle UI Animations & Micro-Interactions
+   ======================================================== */
+.fade-in {
+  animation: fadeInAnimation 0.3s ease-in-out forwards;
+}
+
+@keyframes fadeInAnimation {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Interactive Form Loading Spinner & Anti-Double-Click State */
+.btn-loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.15em;
+  vertical-align: -0.125em;
+}
+
+/* View Mode Toggle Pill Transition */
+.btn-group .btn {
+  transition: all 0.18s ease;
+}
+
+/* Accessible prefers-reduced-motion overrides across all elements */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .fade-in {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+

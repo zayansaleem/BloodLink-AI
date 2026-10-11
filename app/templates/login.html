@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In / Register - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md mx-auto bg-white rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-200 overflow-hidden">
+    
+    <!-- Tab Headers -->
+    <div class="flex border-b border-slate-200">
+      <button onclick="switchTab('login')" id="tab-login-btn" class="flex-1 py-4 text-center text-sm font-bold border-b-2 {% if active_tab != 'register' %}border-rose-600 text-rose-600 bg-rose-50/30{% else %}border-transparent text-slate-500 hover:text-slate-800{% endif %} transition">
+        <i class="fa-solid fa-arrow-right-to-bracket mr-1.5"></i>Sign In
+      </button>
+      <button onclick="switchTab('register')" id="tab-register-btn" class="flex-1 py-4 text-center text-sm font-bold border-b-2 {% if active_tab == 'register' %}border-rose-600 text-rose-600 bg-rose-50/30{% else %}border-transparent text-slate-500 hover:text-slate-800{% endif %} transition">
+        <i class="fa-solid fa-user-plus mr-1.5"></i>Join as Donor
+      </button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-panel" class="p-6 sm:p-8 {% if active_tab == 'register' %}hidden{% endif %}">
+      <div class="text-center mb-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">Welcome Back</h2>
+        <p class="text-xs text-slate-500 mt-1">Access your lifesaver dashboard and donation status</p>
+      </div>
+
+      <form action="{{ url_for('auth.login') }}" method="POST" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Email Address</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <i class="fa-regular fa-envelope"></i>
+            </span>
+            <input type="email" name="email" required placeholder="donor@bloodlink.ai" class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Password</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <i class="fa-solid fa-lock"></i>
+            </span>
+            <input type="password" name="password" required placeholder="••••••••" class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs">
+          <label class="flex items-center space-x-2 text-slate-600 cursor-pointer">
+            <input type="checkbox" name="remember" class="rounded text-rose-600 focus:ring-rose-500">
+            <span>Keep me logged in</span>
+          </label>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-md shadow-rose-200 transition text-sm">
+          Sign In to BloodLink
+        </button>
+      </form>
+
+      <!-- Quick Demo Credentials Card -->
+      <div class="mt-6 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600">
+        <span class="font-bold text-slate-800 block mb-1"><i class="fa-solid fa-key mr-1 text-amber-500"></i>Demo Accounts:</span>
+        <div class="space-y-1">
+          <div><span class="font-semibold text-rose-700">Donor:</span> <code>arjun@donor.com</code> / <code>donor123</code></div>
+          <div><span class="font-semibold text-blue-700">Hospital:</span> <code>apollo@hospital.com</code> / <code>hospital123</code></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registration Form -->
+    <div id="register-panel" class="p-6 sm:p-8 {% if active_tab != 'register' %}hidden{% endif %}">
+      <div class="text-center mb-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">Join the Lifesaver Network</h2>
+        <p class="text-xs text-slate-500 mt-1">Get +50 welcome points and save lives during emergencies</p>
+      </div>
+
+      <form action="{{ url_for('auth.register') }}" method="POST" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Full Name</label>
+          <input type="text" name="full_name" required placeholder="Dr. Sarah Connor / John Doe" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Username</label>
+            <input type="text" name="username" required placeholder="lifesaver26" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Phone Number</label>
+            <input type="tel" name="phone" required placeholder="+91 98765 43210" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Email Address</label>
+          <input type="email" name="email" required placeholder="you@domain.com" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Password</label>
+          <input type="password" name="password" required placeholder="Minimum 6 characters" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Blood Group</label>
+            <select name="blood_group" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+              <option value="O+">O Positive (O+)</option>
+              <option value="O-">O Negative (O-)</option>
+              <option value="A+">A Positive (A+)</option>
+              <option value="A-">A Negative (A-)</option>
+              <option value="B+">B Positive (B+)</option>
+              <option value="B-">B Negative (B-)</option>
+              <option value="AB+">AB Positive (AB+)</option>
+              <option value="AB-">AB Negative (AB-)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Account Role</label>
+            <select name="role" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+              <option value="donor" selected>Blood Donor</option>
+              <option value="hospital">Hospital / Requester</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase">City / Location</label>
+            <button type="button" onclick="detectLocation()" class="text-[11px] font-bold text-rose-600 hover:text-rose-700">
+              <i class="fa-solid fa-location-crosshairs mr-1"></i>Use GPS
+            </button>
+          </div>
+          <input type="text" name="city" id="city-input" value="Bengaluru" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none">
+          <input type="hidden" name="latitude" id="lat-input" value="12.9716">
+          <input type="hidden" name="longitude" id="lon-input" value="77.5946">
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-md shadow-rose-200 transition text-sm">
+          Complete Registration &amp; Claim 50 Pts
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  const loginPanel = document.getElementById('login-panel');
+  const registerPanel = document.getElementById('register-panel');
+  const loginBtn = document.getElementById('tab-login-btn');
+  const registerBtn = document.getElementById('tab-register-btn');
+
+  if (tab === 'login') {
+    loginPanel.classList.remove('hidden');
+    registerPanel.classList.add('hidden');
+    loginBtn.className = "flex-1 py-4 text-center text-sm font-bold border-b-2 border-rose-600 text-rose-600 bg-rose-50/30 transition";
+    registerBtn.className = "flex-1 py-4 text-center text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition";
+  } else {
+    loginPanel.classList.add('hidden');
+    registerPanel.classList.remove('hidden');
+    registerBtn.className = "flex-1 py-4 text-center text-sm font-bold border-b-2 border-rose-600 text-rose-600 bg-rose-50/30 transition";
+    loginBtn.className = "flex-1 py-4 text-center text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition";
+  }
+}
+
+function detectLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(position => {
+      document.getElementById('lat-input').value = position.coords.latitude;
+      document.getElementById('lon-input').value = position.coords.longitude;
+      alert(`Location updated to Lat: ${position.coords.latitude.toFixed(4)}, Lon: ${position.coords.longitude.toFixed(4)}`);
+    }, err => {
+      alert('Unable to retrieve location: ' + err.message);
+    });
+  } else {
+    alert('Geolocation is not supported by your browser.');
+  }
+}
+</script>
+{% endblock %}

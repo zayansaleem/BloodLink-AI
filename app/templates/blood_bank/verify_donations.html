@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Donation Verification - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="fw-bold text-dark mb-0">Donation Verification Desk</h4>
+        <small class="text-secondary">Verify voluntary donations to safely credit reward points and reset donor cooldowns.</small>
+      </div>
+      <a href="{{ url_for('blood_bank.dashboard') }}" class="btn btn-outline-secondary btn-sm rounded-pill">
+        <i class="bi bi-arrow-left me-1"></i>Back
+      </a>
+    </div>
+
+    <!-- Record In-Person Donation Form Card -->
+    {% if org.is_verified %}
+    <div class="card card-saas p-4 bg-white mb-4">
+      <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom"><i class="bi bi-person-check text-success me-2"></i>Record New In-Person Donation</h6>
+      
+      <form action="{{ url_for('blood_bank.record_donation') }}" method="POST" class="row g-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="col-md-5">
+          <label class="form-label small fw-bold text-secondary">Donor Registered Email *</label>
+          <input type="email" name="donor_email" required placeholder="donor@domain.com" class="form-control form-control-sm">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label small fw-bold text-secondary">Component *</label>
+          <select name="component_type" class="form-select form-select-sm">
+            <option value="Whole Blood">Whole Blood</option>
+            <option value="Red Blood Cells">Red Blood Cells</option>
+            <option value="Platelets">Platelets</option>
+            <option value="Plasma">Plasma</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label small fw-bold text-secondary">Units *</label>
+          <input type="number" name="units" min="1" max="2" value="1" required class="form-control form-control-sm">
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="submit" class="btn btn-crimson btn-sm w-100 rounded-3 fw-bold">
+            <i class="bi bi-plus-lg me-1"></i>Record Intake
+          </button>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- Pending Verification Queue -->
+    <div class="card card-saas p-4 bg-white mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <h5 class="fw-bold text-dark mb-0">Pending Verification Queue</h5>
+        <span class="badge bg-danger">{{ pending_donations|length }} Pending</span>
+      </div>
+
+      {% if pending_donations %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th>ID</th>
+              <th>Donor Name &amp; Email</th>
+              <th>Component</th>
+              <th>Units</th>
+              <th>Intake Date</th>
+              <th class="text-end">Verification Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in pending_donations %}
+            <tr>
+              <td class="fw-bold">#{{ d.id }}</td>
+              <td>
+                <strong class="text-dark">{{ d.donor.name }}</strong>
+                <small class="text-muted d-block">{{ d.donor.email }} ({{ d.donor.donor_profile.declared_blood_group }})</small>
+              </td>
+              <td>{{ d.component_type }}</td>
+              <td class="fw-bold">{{ d.units }} Unit(s)</td>
+              <td>{{ d.donation_date.strftime('%d %b %Y, %H:%M') }}</td>
+              <td class="text-end">
+                {% if org.is_verified %}
+                <form action="{{ url_for('blood_bank.verify_donation', donation_id=d.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Verify donation #{{ d.id }} and award reward points?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-success btn-sm rounded-pill px-3 fw-bold">
+                    <i class="bi bi-check-lg me-1"></i>Verify &amp; Award Points
+                  </button>
+                </form>
+                {% else %}
+                <span class="badge bg-secondary">Unverified Facility</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted small mb-0 text-center py-3">All recorded donations have been verified.</p>
+      {% endif %}
+    </div>
+
+    <!-- Verified Donations Log -->
+    <div class="card card-saas p-4 bg-white">
+      <h5 class="fw-bold text-dark mb-3">Recently Verified Donations (Audit Log)</h5>
+      {% if verified_donations %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+          <thead class="table-light text-secondary text-uppercase" style="font-size: 11px;">
+            <tr>
+              <th>Donation ID</th>
+              <th>Donor</th>
+              <th>Component</th>
+              <th>Units</th>
+              <th>Verified Timestamp</th>
+              <th>Verifying Staff</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for vd in verified_donations %}
+            <tr>
+              <td class="fw-bold">#{{ vd.id }}</td>
+              <td>{{ vd.donor.name }}</td>
+              <td>{{ vd.component_type }}</td>
+              <td>{{ vd.units }}</td>
+              <td>{{ vd.verified_at.strftime('%d %b %Y, %H:%M') if vd.verified_at else '-' }}</td>
+              <td class="text-muted">{{ vd.verifier.name if vd.verifier else 'Staff' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted small mb-0 text-center py-3">No verified records yet.</p>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

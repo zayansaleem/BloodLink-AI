@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Blood Request - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5">
+  <div class="container" style="max-width: 720px;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-danger bg-opacity-10 text-crimson fw-bold small mb-2">
+          <i class="bi bi-hospital"></i>
+          <span>Hospital Transfusion Emergency Grid</span>
+        </div>
+        <h3 class="fw-bold text-dark mb-0">Create Emergency Blood Request</h3>
+        <small class="text-secondary">Submit clinical blood request for immediate verification, priority scoring, and smart donor matching.</small>
+      </div>
+      <a href="{{ url_for('hospital.dashboard') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+        <i class="bi bi-arrow-left me-1"></i>Back
+      </a>
+    </div>
+
+    <div class="card card-saas p-4 p-md-5 bg-white shadow-sm border">
+      <form action="{{ url_for('hospital.create_request') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom d-flex align-items-center gap-2">
+          <i class="bi bi-droplet-fill text-crimson"></i>
+          <span>Transfusion Requirements</span>
+        </h6>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Required Blood Group *</label>
+            <select name="blood_group" required class="form-select fw-bold text-danger border">
+              <option value="O+">O Positive (O+)</option>
+              <option value="O-">O Negative (O- Universal Donor)</option>
+              <option value="A+">A Positive (A+)</option>
+              <option value="A-">A Negative (A-)</option>
+              <option value="B+">B Positive (B+)</option>
+              <option value="B-">B Negative (B-)</option>
+              <option value="AB+">AB Positive (AB+ Universal Recipient)</option>
+              <option value="AB-">AB Negative (AB-)</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Component Type *</label>
+            <select name="component_type" required class="form-select border">
+              <option value="Whole Blood">Whole Blood</option>
+              <option value="Red Blood Cells">Red Blood Cells (PRBC)</option>
+              <option value="Platelets">Platelets (RDP / SDP)</option>
+              <option value="Plasma">Fresh Frozen Plasma (FFP)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Units Required *</label>
+            <input type="number" name="units_required" min="1" max="20" value="1" required class="form-control fw-bold">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Clinical Urgency Level *</label>
+            <select name="urgency_level" required class="form-select fw-bold text-dark border">
+              <option value="CRITICAL">CRITICAL (Immediate Life Threat / ICU)</option>
+              <option value="HIGH" selected>HIGH (Surgery within 6 Hours)</option>
+              <option value="MEDIUM">MEDIUM (Within 24 Hours)</option>
+              <option value="ROUTINE">ROUTINE (Planned Transfusion)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-secondary">Clinical Deadline (Surgeon / ICU Schedule)</label>
+          <input type="datetime-local" name="clinical_deadline" class="form-control form-control-sm">
+          <small class="text-muted" style="font-size: 11px;">Imminent deadlines dynamically increase emergency triage priority.</small>
+        </div>
+
+        <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom pt-2 d-flex align-items-center gap-2">
+          <i class="bi bi-geo-alt-fill text-danger"></i>
+          <span>Location Hierarchy &bull; Pan-India Dispatch</span>
+        </h6>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Request State / UT *</label>
+            <select name="state" id="req_state" required class="form-select border">
+              <option value="">-- Select State / UT --</option>
+              {% for st in all_indian_states %}
+              <option value="{{ st }}" {% if st == org.state %}selected{% endif %}>{{ st }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Request District *</label>
+            <select name="district" id="req_district" required class="form-select border">
+              <option value="">-- Select District --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-secondary">City / Town *</label>
+          <input type="text" name="city" id="req_city" value="{{ org.city or '' }}" required placeholder="e.g. Pune, Kochi, Mysuru" class="form-control">
+        </div>
+
+        <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom pt-2 d-flex align-items-center gap-2">
+          <i class="bi bi-telephone-fill text-primary"></i>
+          <span>Coordination &amp; Dispatch Details</span>
+        </h6>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-secondary">Hospital Department / Ward / OT *</label>
+          <input type="text" name="location" value="{{ org.organization_name }}, {{ org.city }}" required class="form-control">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-secondary">Authorized Emergency Contact Phone *</label>
+          <input type="tel" name="contact_phone" value="{{ org.contact_phone }}" required class="form-control">
+        </div>
+
+        <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom pt-2 d-flex align-items-center gap-2">
+          <i class="bi bi-person-badge-fill text-navy"></i>
+          <span>Patient Clinical Reference &bull; Confidential</span>
+        </h6>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Internal Patient / Case Reference</label>
+            <input type="text" name="patient_reference" placeholder="e.g. IPD-2026-4029" class="form-control">
+            <small class="text-muted" style="font-size: 11px;">Hospital internal admission identifier.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold text-secondary">Patient Name (Optional &bull; Clinical Privacy)</label>
+            <input type="text" name="patient_name" placeholder="e.g. S. Sharma" class="form-control">
+            <small class="text-muted" style="font-size: 11px;">Protected: Visible strictly to your hospital staff for bedside matching.</small>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label small fw-bold text-secondary">Additional Clinical Coordination Notes</label>
+          <textarea name="additional_notes" rows="2" placeholder="e.g. Major surgery scheduled, cross-match tube ready at hospital blood storage" class="form-control small"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-crimson w-100 py-3 fw-bold rounded-3 shadow-sm">
+          <i class="bi bi-shield-check me-2"></i>Submit Request For Clinical Verification
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    initLocationCascade(
+      'req_state',
+      'req_district',
+      'req_city',
+      '{{ org.district or "" }}',
+      '{{ org.city or "" }}'
+    );
+  });
+</script>
+{% endblock %}

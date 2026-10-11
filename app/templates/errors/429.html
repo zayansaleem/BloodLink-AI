@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Too Many Requests (429) - BloodLink AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper py-5 d-flex align-items-center">
+  <div class="container text-center" style="max-width: 540px;">
+    <div class="card card-saas p-5 bg-white border">
+      <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning rounded-circle p-4 mb-3 mx-auto" style="width: 80px; height: 80px;">
+        <i class="bi bi-shield-exclamation fs-1"></i>
+      </div>
+      <h3 class="fw-bold text-dark">Rate Limit Exceeded</h3>
+      <p class="text-secondary small leading-relaxed mb-4">
+        To prevent automated password guessing and protect healthcare infrastructure, request rates to this endpoint are strictly throttled. Please wait a few moments before trying again.
+      </p>
+      {% if error and error.description %}
+      <div class="alert alert-light border small text-muted py-2 mb-4">
+        <i class="bi bi-info-circle me-1"></i>{{ error.description }}
+      </div>
+      {% endif %}
+      <div class="d-flex justify-content-center gap-2">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-crimson rounded-pill px-4 fw-bold">
+          Back to Login
+        </a>
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+          Home
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

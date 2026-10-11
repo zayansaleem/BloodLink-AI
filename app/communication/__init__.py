@@ -1,0 +1,1 @@
+# Communication blueprint initialization
